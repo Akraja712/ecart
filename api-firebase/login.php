@@ -36,17 +36,17 @@ APIs for Multi Vendor
 -------------------------------------------
 */
 
-if (!verify_token()) {
-    return false;
-}
+//if (!verify_token()) {
+ //   return false;
+//}
 
 
-if (!isset($_POST['accesskey'])  || trim($_POST['accesskey']) != $access_key) {
+/*if (!isset($_POST['accesskey'])  || trim($_POST['accesskey']) != $access_key) {
     $response['error'] = true;
     $response['message'] = "No Accsess key found!";
     print_r(json_encode($response));
     return false;
-}
+}*/
 
 if (isset($_POST['login']) && $_POST['login'] == 1) {
     /* 
