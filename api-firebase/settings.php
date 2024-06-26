@@ -347,7 +347,7 @@ if (isset($_POST['settings']) && $_POST['settings'] == 1) {
     $shipping_type = ($fn->get_settings('local_shipping') == 1) ? 'local' : 'standard';
     $res['error'] = false;
     $res['message'] = "Shipping type fetched successfully";
-    $res['maintenance'] = $fn->get_maintenance_mode('customer');
+    $res['maintenance'] = "0";
     $res['shipping_type'] = $shipping_type;
 
     print_r(json_encode($res));
