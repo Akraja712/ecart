@@ -25,7 +25,7 @@ if (isset($_POST['btnEdit'])) {
         if (empty($pincode)) {
             $error['pincode'] = " <span class='label label-danger'>Required!</span>";
         }
-        $check = $fn->get_data('pincodes', 'pincode=' . "'$pincode'", ['pincode']);
+        //$check = $fn->get_data('pincodes', 'pincode=' . "'$pincode'", ['pincode']);
         $data = $fn->get_data('pincodes', 'id=' . $ID, ['pincode']);
         if (!empty($check) && ($pincode != $data[0]['pincode'])) {
             $error['update_data'] = '<label class="alert alert-danger">Pincode Alreay exist</label>';
