@@ -7,7 +7,7 @@
 
 define('DOMAIN_URL', ''); /* chnage to your domain here - don't forget to add forward slash at the end of the URL like this "/" */
 define('ALLOW_MODIFICATION', 1);
-define('JWT_SECRET_KEY', 'replace_with_your_strong_jwt_secret_key'); /* chnage to your secret key here set it to anything you like*/
+define('JWT_SECRET_KEY', 'gmworks'); /* chnage to your secret key here set it to anything you like*/
 
 class Database
 {
