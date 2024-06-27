@@ -18,8 +18,8 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<link rel="icon" type="image/ico" href="<?= DOMAIN_URL . 'dist/img/'.$logo?>">
-	<title>Admin Login - <?=$settings['app_name']?></title>
+	<link rel="icon" type="image/ico" href="dist/img/new.jpeg">
+	<title>Admin Login - GPN Collection</title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <!-- Bootstrap 3.3.5 -->

@@ -30,7 +30,7 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title><?= $settings['app_name'] ?> - Dashboard</title>
+    <title>GPN Collection- Dashboard</title>
 </head>
 
 <body>
