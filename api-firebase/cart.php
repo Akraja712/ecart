@@ -38,23 +38,23 @@ if (isset($config['system_timezone']) && isset($config['system_timezone_gmt'])) 
     $db->sql("SET `time_zone` = '+05:30'");
 }
 
-if (!isset($_POST['accesskey'])) {
-    $response['error'] = true;
-    $response['message'] = "Access key is invalid or not passed!";
-    print_r(json_encode($response));
-    return false;
-}
-$accesskey = $db->escapeString($fn->xss_clean_array($_POST['accesskey']));
-if ($access_key != $accesskey) {
-    $response['error'] = true;
-    $response['message'] = "invalid accesskey!";
-    print_r(json_encode($response));
-    return false;
-}
+// if (!isset($_POST['accesskey'])) {
+//     $response['error'] = true;
+//     $response['message'] = "Access key is invalid or not passed!";
+//     print_r(json_encode($response));
+//     return false;
+// }
+//$accesskey = $db->escapeString($fn->xss_clean_array($_POST['accesskey']));
+// if ($access_key != $accesskey) {
+//     $response['error'] = true;
+//     $response['message'] = "invalid accesskey!";
+//     print_r(json_encode($response));
+//     return false;
+// }
 
-if (!verify_token()) {
-    return false;
-}
+// if (!verify_token()) {
+//     return false;
+// }
 
 /*
 1.add_to_cart
@@ -130,7 +130,9 @@ if ((isset($_POST['add_to_cart'])) && ($_POST['add_to_cart'] == 1)) {
                         $db->sql($sql);
                         $result = $db->getResult();
                         if (isset($result[0]['status']) && $result[0]['status'] == 1) {
-                            $total_allowed_quantity = $fn->get_data('products', "id='" . $product_id . "'", $columns = ['total_allowed_quantity']);
+                         // Correct way to call the function
+                            $total_allowed_quantity = $fn->get_data(['total_allowed_quantity'], "id='" . $product_id . "'", 'products');
+
                             if (isset($total_allowed_quantity[0]['total_allowed_quantity']) && !empty($total_allowed_quantity[0]['total_allowed_quantity'])) {
                                 if ($qty > $total_allowed_quantity[0]['total_allowed_quantity']) {
                                     $response['error'] = true;

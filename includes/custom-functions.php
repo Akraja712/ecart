@@ -1059,14 +1059,14 @@ class custom_functions
     }
     public function get_data($columns = [], $where, $table)
     {
-        $sql = "select ";
+        $sql = "SELECT ";
         if (!empty($columns)) {
             $columns = implode(",", $columns);
-            $sql .= " $columns from ";
+            $sql .= "$columns FROM ";
         } else {
-            $sql .= " * from ";
+            $sql .= "* FROM ";
         }
-        $sql .= " `$table` WHERE $where";
+        $sql .= "`$table` WHERE $where";
         $this->db->sql($sql);
         $res = $this->db->getResult();
         return $res;
