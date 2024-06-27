@@ -130,9 +130,7 @@ if ((isset($_POST['add_to_cart'])) && ($_POST['add_to_cart'] == 1)) {
                         $db->sql($sql);
                         $result = $db->getResult();
                         if (isset($result[0]['status']) && $result[0]['status'] == 1) {
-                         // Correct way to call the function
-                            $total_allowed_quantity = $fn->get_data(['total_allowed_quantity'], "id='" . $product_id . "'", 'products');
-
+                            $total_allowed_quantity = $fn->get_data('products', "id='" . $product_id . "'", $columns = ['total_allowed_quantity']);
                             if (isset($total_allowed_quantity[0]['total_allowed_quantity']) && !empty($total_allowed_quantity[0]['total_allowed_quantity'])) {
                                 if ($qty > $total_allowed_quantity[0]['total_allowed_quantity']) {
                                     $response['error'] = true;

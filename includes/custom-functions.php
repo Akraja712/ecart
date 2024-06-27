@@ -1057,7 +1057,7 @@ class custom_functions
         $result = $this->db->getResult();
         return !$this->db->numRows();;
     }
-    public function get_data($columns = [], $where, $table)
+    public function get_data($table, $where, $columns = [])
     {
         $sql = "SELECT ";
         if (!empty($columns)) {
