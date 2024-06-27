@@ -116,6 +116,7 @@ if ((isset($_POST['add_to_cart'])) && ($_POST['add_to_cart'] == 1)) {
                             'qty' => $qty,
                             'save_for_later' => 0
                         );
+                        
                         if ($db->update('cart',  'user_id=' . $user_id . ' AND product_variant_id=' . $product_variant_id, $data)) {
                             $response['error'] = false;
                             $response['message'] = 'Item added in users cart successfully';

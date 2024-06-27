@@ -641,6 +641,18 @@ class custom_functions
             return 0;
         }
     }
+    public function is_item_available_in_save_for_later($user_id, $product_variant_id = "")
+    {
+        $sql = "SELECT id FROM cart WHERE save_for_later = 1 AND user_id=" . $user_id;
+        $sql .= !empty($product_variant_id) ? " AND product_variant_id=" . $product_variant_id : "";
+        $this->db->sql($sql);
+        $res = $this->db->getResult();
+        if (!empty($res)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
     public function is_item_available($product_id, $product_variant_id)
     {
         $sql = "SELECT id FROM product_variant WHERE product_id=" . $product_id . " AND id=" . $product_variant_id;
