@@ -228,7 +228,7 @@ if (((isset($_POST['add_multiple_items'])) && ($_POST['add_multiple_items'] == 1
                                         $data = array(
                                             'qty' => $qty[$i]
                                         );
-                                        $db->update('cart', 'user_id=' . $user_id . ' AND product_variant_id=' . $product_variant_id[$i], $data);
+                                        //$db->update('cart', 'user_id=' . $user_id . ' AND product_variant_id=' . $product_variant_id[$i], $data);
                                     }
                                 } else {
                                     if (!empty($qty[$i]) && $qty[$i] != 0) {
