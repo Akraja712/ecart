@@ -55,15 +55,36 @@ functions
 49. add_wallet_balance($order_id, $user_id, $amount, $type,$message)
 50. send_notification_to_admin($id, $title, $message, $type, $order_id)
 51. add_seller_wallet_transaction($order_id = "",$order_item_id, $seller_id, $type, $amount, $message = 'Used against Order Placement', $status = 1)
+52. replaceArrayKeys($array)
+53. validate_image($file, $is_image = true)
+54. validate_other_images($tmp_name, $type)
+55. is_order_item_cancelled($order_item_id)
+56. is_order_item_returned($active_status, $postStatus)
+57. cancel_order_item($id, $order_item_id)
+58. get_user_address($address_id)
+59. send_notification_to_seller($sid, $title, $message, $type, $id)
+60. check_for_return_request($product_id = 0, $order_id = 0)
+61. delete_product($product_id)
+62. get_seller_permission($seller_id, $permission)
+63. get_seller_balance($seller_id)
+64. delete_order($order_id)
+65. delete_order_item($order_item_id)
+66. select_top_sellers()
+67. select_top_categories()
+68. function set_timezone($config)
+69. delete_other_images($pid, $i, $seller_id = "0")
+70. delete_variant($v_id)
+71. get_seller_address($seller_id)
+72. add_transaction($order_id = "", $id = "", $type = '', $amount, $message = '', $date = '', $status = 1)
 
 */
-include_once('crud.php');
+
+require_once('crud.php');
 require_once('firebase.php');
 require_once('push.php');
 require_once('functions.php');
 
-
-$fn = new functions;
+$fn = new functions();
 class custom_functions
 {
     protected $db;
@@ -88,6 +109,7 @@ class custom_functions
 
     function xss_clean($data)
     {
+
         $data = trim($data);
         // Fix &entity\n;
         $data = str_replace(array('&amp;', '&lt;', '&gt;'), array('&amp;amp;', '&amp;lt;', '&amp;gt;'), $data);
@@ -120,7 +142,16 @@ class custom_functions
         // we are done...
         return $data;
     }
+    function get_pincode_id_by_pincode($pincode)
+    {
+        $sql = "SELECT id from pincodes where pincode = " . $pincode;
+        $this->db->sql($sql);
+        $res = $this->db->getResult();
 
+        if (!empty($res)) {
+            return $res;
+        }
+    }
     function get_product_by_id($id = null)
     {
         if (!empty($id)) {
@@ -150,7 +181,7 @@ class custom_functions
             $arr = json_decode($arr, 1);
             $i = 0;
             foreach ($arr as $id) {
-                $sql = "SELECT *,pv.id,(SELECT t.title FROM taxes t WHERE t.id=p.tax_id) as tax_title,(SELECT t.percentage FROM taxes t WHERE t.id=p.tax_id) as tax_percentage,(SELECT short_code FROM unit u WHERE u.id=pv.measurement_unit_id) as measurement_unit_name,(SELECT short_code FROM unit u WHERE u.id=pv.stock_unit_id) as stock_unit_name FROM product_variant pv JOIN products p ON pv.product_id=p.id WHERE pv.id=" . $id;
+                $sql = "SELECT *,pv.id,pv.type as product_type,(SELECT t.title FROM taxes t WHERE t.id=p.tax_id) as tax_title,(SELECT t.percentage FROM taxes t WHERE t.id=p.tax_id) as tax_percentage,(SELECT short_code FROM unit u WHERE u.id=pv.measurement_unit_id) as measurement_unit_name,(SELECT short_code FROM unit u WHERE u.id=pv.stock_unit_id) as stock_unit_name FROM product_variant pv JOIN products p ON pv.product_id=p.id WHERE pv.id=" . $id;
                 $this->db->sql($sql);
                 $res[$i] = $this->db->getResult()[0];
                 $i++;
@@ -214,8 +245,12 @@ class custom_functions
     }
     public function get_balance($id)
     {
-        $sql = "SELECT balance FROM delivery_boys WHERE id=" . $id;
+        $sql = "select name,bonus from delivery_boys where id=" . $id;
         $this->db->sql($sql);
+        $res_bonus = $this->db->getResult();
+        // print_r($res_bonus);
+        $sql_new = "SELECT balance FROM delivery_boys WHERE id=" . $id;
+        $this->db->sql($sql_new);
         $res = $this->db->getResult();
         if (!empty($res)) {
             return $res[0]['balance'];
@@ -250,7 +285,7 @@ class custom_functions
         $data = array(
             'balance' => $balance
         );
-        $this->db->update($table_name, $data, 'id=' . $id);
+        $this->db->update($table_name, 'id=' . $id, $data);
         $res = $this->db->getResult();
         if (!empty($res)) {
             return true;
@@ -259,7 +294,7 @@ class custom_functions
         }
     }
 
-    public function add_wallet_transaction($order_id = "", $order_item_id = "", $id = "", $type, $amount, $message = 'Used against Order Placement', $table_name, $status = 1)
+    public function add_wallet_transaction($table_name, $type, $amount, $order_id = "", $order_item_id = "", $id = "",  $message = 'Used against Order Placement', $status = 1)
     {
         if ($table_name == 'seller_wallet_transactions') {
             $data = array(
@@ -312,13 +347,7 @@ class custom_functions
         $jwt_token = generate_token();
 
         $ch = curl_init();
-        curl_setopt(
-            $ch,
-            CURLOPT_HTTPHEADER,
-            [
-                "Authorization: Bearer $jwt_token"
-            ]
-        );
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $jwt_token"]);
         curl_setopt($ch, CURLOPT_URL, DOMAIN_URL . "api-firebase/order-process.php");
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
@@ -446,10 +475,12 @@ class custom_functions
         $this->db->sql($sql);
         $res = $this->db->getResult();
         if (!empty($res) && isset($res[0]['value'])) {
-            if ($is_json)
+            if ($is_json) {
+                $res[0]['value'] = preg_replace('/\r|\n/', '\n', trim($res[0]['value']));
                 return json_decode($res[0]['value'], true);
-            else
+            } else {
                 return $res[0]['value'];
+            }
         } else {
             return false;
         }
@@ -491,7 +522,8 @@ class custom_functions
             $firebase = new Firebase();
 
             //sending push notification and displaying result 
-            $firebase->send($token, $mPushNotification);
+            $res = $firebase->send($token, $mPushNotification);
+            // print_r($res);
             $response['error'] = false;
             $response['message'] = "Successfully Send";
         } else {
@@ -527,7 +559,9 @@ class custom_functions
             $sql = "SELECT fcm_id FROM delivery_boys WHERE id = '" . $delivery_boy_id . "'";
             $this->db->sql($sql);
             $res = $this->db->getResult();
+
             $token = array();
+
             foreach ($res as $row) {
                 array_push($token, $row['fcm_id']);
             }
@@ -537,6 +571,7 @@ class custom_functions
 
             //sending push notification and displaying result 
             $firebase->send($token, $m_push_notification);
+            // print_r($firebase);
             $response['error'] = false;
             $response['message'] = "Successfully Send";
             //print_r(json_encode($response));
@@ -613,8 +648,8 @@ class custom_functions
             'status' => $status
         );
         $this->db->insert('fund_transfers', $data);
-        $this->db->getResult()[0];
-        return $this->db->getResult()[0];
+        $result = $this->db->getResult()[0];
+        return (!empty($result)) ? $result : "0";
     }
 
     public function store_delivery_boy_notification($delivery_boy_id, $order_item_id, $title, $message, $type)
@@ -641,25 +676,13 @@ class custom_functions
             return 0;
         }
     }
-    public function is_item_available_in_save_for_later($user_id, $product_variant_id = "")
-    {
-        $sql = "SELECT id FROM cart WHERE save_for_later = 1 AND user_id=" . $user_id;
-        $sql .= !empty($product_variant_id) ? " AND product_variant_id=" . $product_variant_id : "";
-        $this->db->sql($sql);
-        $res = $this->db->getResult();
-        if (!empty($res)) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
     public function is_item_available($product_id, $product_variant_id)
     {
         $sql = "SELECT id FROM product_variant WHERE product_id=" . $product_id . " AND id=" . $product_variant_id;
         $this->db->sql($sql);
         $res = $this->db->getResult();
         if (!empty($res)) {
-            $sql = "SELECT id FROM products WHERE id=$product_id";
+            $sql = "SELECT id FROM products  WHERE status = 1  AND id=$product_id";
             $this->db->sql($sql);
             $res = $this->db->getResult();
             if (!empty($res)) {
@@ -782,7 +805,7 @@ class custom_functions
         $data = array(
             'balance' => $balance
         );
-        if ($this->db->update('delivery_boys', $data, 'id=' . $id))
+        if ($this->db->update('delivery_boys', 'id=' . $id, $data))
             return true;
         else
             return false;
@@ -798,7 +821,9 @@ class custom_functions
     }
     function low_stock_count1($low_stock_limit, $id)
     {
+        // echo $id;
         $sql = "SELECT COUNT(pv.id) as total FROM `product_variant` pv JOIN products p ON p.id=pv.product_id WHERE pv.stock < $low_stock_limit AND pv.serve_for='Available' AND p.seller_id=$id";
+        // echo $sql;
         $this->db->sql($sql);
         $res = $this->db->getResult();
         foreach ($res as $row)
@@ -807,7 +832,7 @@ class custom_functions
 
     function sold_out_count()
     {
-        $sql = "SELECT COUNT(id) as total FROM product_variant WHERE  serve_for='Sold Out'";
+        $sql = "SELECT COUNT(id) as total FROM product_variant WHERE  serve_for='Sold Out' and stock <= 0";
         $this->db->sql($sql);
         $res = $this->db->getResult();
         foreach ($res as $row)
@@ -815,7 +840,7 @@ class custom_functions
     }
     function sold_out_count1($id)
     {
-        $sql1 = "SELECT COUNT(pv.id) as total FROM product_variant pv JOIN products p ON p.id=pv.product_id WHERE pv.serve_for='Sold Out' AND p.seller_id=$id";
+        $sql1 = "SELECT COUNT(pv.id) as total FROM product_variant pv JOIN products p ON p.id=pv.product_id WHERE pv.serve_for='Sold Out' and pv.stock <= 0 AND p.seller_id=$id";
         $this->db->sql($sql1);
         $res = $this->db->getResult();
         foreach ($res as $row)
@@ -871,9 +896,14 @@ class custom_functions
         }
     }
 
-    public function validate_email($email)
+    public function validate_email($email, $table = '')
     {
-        $sql = "SELECT email FROM `admin` WHERE email='" . $email . "'";
+        if ($table == 'seller') {
+            $sql = "SELECT email FROM `seller` WHERE email='" . $email . "'";
+        } else {
+
+            $sql = "SELECT email FROM `admin` WHERE email='" . $email . "'";
+        }
         $this->db->sql($sql);
         $res = $this->db->getResult();
         if (!empty($res)) {
@@ -883,9 +913,13 @@ class custom_functions
         }
     }
 
-    public function update_forgot_password_code($email, $code)
+    public function update_forgot_password_code($email, $code, $table = '')
     {
-        $sql = "UPDATE admin set forgot_password_code = '" . $code . "' WHERE email='" . $email . "'";
+        if ($table == 'seller') {
+            $sql = "UPDATE seller set forgot_password_code = '" . $code . "' WHERE email='" . $email . "'";
+        } else {
+            $sql = "UPDATE admin set forgot_password_code = '" . $code . "' WHERE email='" . $email . "'";
+        }
         if ($this->db->sql($sql)) {
             return true;
         } else {
@@ -893,9 +927,13 @@ class custom_functions
         }
     }
 
-    public function validate_code($code)
+    public function validate_code($code, $table = '')
     {
-        $sql = "SELECT forgot_password_code FROM `admin` WHERE forgot_password_code='" . $code . "'";
+        if ($table == 'seller') {
+            $sql = "SELECT forgot_password_code FROM `seller` WHERE forgot_password_code='" . $code . "'";
+        } else {
+            $sql = "SELECT forgot_password_code FROM `admin` WHERE forgot_password_code='" . $code . "'";
+        }
         $this->db->sql($sql);
         $res = $this->db->getResult();
         if (!empty($res)) {
@@ -905,9 +943,13 @@ class custom_functions
         }
     }
 
-    public function get_user($code)
+    public function get_user($code, $table = '')
     {
-        $sql = "SELECT username,email FROM `admin` WHERE forgot_password_code='" . $code . "'";
+        if ($table == 'seller') {
+            $sql = "SELECT name,email FROM `seller` WHERE forgot_password_code='" . $code . "'";
+        } else {
+            $sql = "SELECT username,email FROM `admin` WHERE forgot_password_code='" . $code . "'";
+        }
         $this->db->sql($sql);
         $res = $this->db->getResult();
         if (!empty($res)) {
@@ -917,9 +959,13 @@ class custom_functions
         }
     }
 
-    public function update_password($code, $password_hash)
+    public function update_password($code, $password_hash, $table = '')
     {
-        $sql = "UPDATE admin set password = '" . $password_hash . "' WHERE forgot_password_code='" . $code . "'";
+        if ($table == 'seller') {
+            $sql = "UPDATE seller set password = '" . $password_hash . "' WHERE forgot_password_code='" . $code . "'";
+        } else {
+            $sql = "UPDATE admin set password = '" . $password_hash . "' WHERE forgot_password_code='" . $code . "'";
+        }
         $this->db->sql($sql);
         $res = $this->db->getResult();
         if (!empty($res)) {
@@ -1067,25 +1113,43 @@ class custom_functions
         $txnid = $this->db->escapeString($txnid);
         $sql = 'SELECT * FROM `payments` WHERE txnid = \'' . $txnid . '\'';
         $result = $this->db->getResult();
-        return !$this->db->numRows();;
+        return !$this->db->numRows();
     }
-    public function get_data($table, $where, $columns = [])
+    public function get_data($table, $where, $columns = [], $offset = '', $limit = '', $sort = '', $order = '')
     {
-        $sql = "SELECT ";
+        $sql = "select ";
         if (!empty($columns)) {
             $columns = implode(",", $columns);
-            $sql .= "$columns FROM ";
+            $sql .= " $columns from ";
         } else {
-            $sql .= "* FROM ";
+            $sql .= " * from ";
         }
-        $sql .= "`$table` WHERE $where";
+        $where1 = !empty($where) ? " WHERE $where" : "";
+        $limit1 = $offset != '' && !empty($limit) ? "LIMIT " . $offset . "," . $limit : '';
+        $order_by = !empty($sort) && !empty($order) ? "ORDER BY " . $sort . " " . $order  : '';
+
+        $sql .= " `$table` $where1 $order_by $limit1";
         $this->db->sql($sql);
         $res = $this->db->getResult();
+        // print_R($res);
         return $res;
     }
     public function update_order_status($id, $order_item_id, $status, $delivery_boy_id = 0)
     {
         $data = array('update_order_status' => '1', 'order_id' => $id, 'status' => $status, 'order_item_id' => $order_item_id, 'delivery_boy_id' => $delivery_boy_id, 'ajaxCall' => 1);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, DOMAIN_URL . "api-firebase/order-process.php");
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+        return $response;
+    }
+    public function update_bulk_order_items($order_items, $status, $delivery_boy_id = 0)
+    {
+        $data = array('update_order_items' => '1', 'status' => $status, 'order_items' => $order_items, 'delivery_boy_id' => $delivery_boy_id, 'ajaxCall' => 1);
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, DOMAIN_URL . "api-firebase/order-process.php");
         curl_setopt($ch, CURLOPT_POST, 1);
@@ -1222,7 +1286,7 @@ class custom_functions
         }
     }
 
-    public function add_seller_wallet_transaction($order_id = "", $order_item_id, $seller_id, $type, $amount, $message = 'Used against Order Placement', $status = 1)
+    public function add_seller_wallet_transaction($order_item_id, $seller_id, $type, $amount, $order_id = "", $message = 'Used against Order Placement', $status = 1)
     {
         // `order_id`, `order_item_id`, `seller_id`, `type`, `amount`, `message`, `status`
         $data = array(
@@ -1257,20 +1321,16 @@ class custom_functions
         } else {
             $type = $file['type'];
         }
+        $type = strtolower($type);
         if ($is_image == false) {
-            if (!in_array($type, array('text/plain'))) {
-                return true;
-            } else {
-                return false;
-            }
-        } else if ($is_image == true) {
-            if (!in_array($type, array('image/jpg', 'image/jpeg', 'image/gif', 'image/png'))) {
+            if (in_array($type, array('text/plain', 'application/csv', 'application/vnd.ms-excel', 'text/csv'))) {
                 return true;
             } else {
                 return false;
             }
         } else {
-            if (!in_array($type, array('image/jpg', 'image/jpeg', 'image/gif', 'image/png'))) {
+
+            if (in_array($type, array('image/jpg', 'image/jpeg', 'image/gif', 'image/png', 'video/mp4', 'application/octet-stream'))) {
                 return true;
             } else {
                 return false;
@@ -1281,13 +1341,13 @@ class custom_functions
     {
         if (function_exists('finfo_file')) {
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $type = finfo_file($finfo, $tmp_name);
+            $type1 = finfo_file($finfo, $tmp_name);
         } else if (function_exists('mime_content_type')) {
-            $type = mime_content_type($tmp_name);
+            $type1 = mime_content_type($tmp_name);
         } else {
-            $type = $tmp_name;
+            $type1 = $type;
         }
-        if (!in_array($type, array('image/jpg', 'image/jpeg', 'image/gif', 'image/png'))) {
+        if (in_array($type1, array('image/jpg', 'image/jpeg', 'image/gif', 'image/png', 'application/octet-stream'))) {
             return true;
         } else {
             return false;
@@ -1315,10 +1375,8 @@ class custom_functions
     }
     public function cancel_order_item($id, $order_item_id)
     {
-        // $sql = 'SELECT oi.`id` as order_item_id,oi.`product_variant_id`,oi.`quantity`,pv.`product_id`,pv.`type`,pv.`stock`,pv.`stock_unit_id`,pv.`measurement`,pv.`measurement_unit_id` FROM `order_items` oi join `product_variant` pv on pv.id = oi.product_variant_id WHERE oi.`id`=' . $order_item_id;
-        // $this->db->sql($sql);
-        // $res_oi = $this->db->getResult();
-        $res_order = $this->get_data($columns = ['final_total', 'total', 'user_id', 'payment_method', 'wallet_balance', 'delivery_charge', 'tax_amount', 'status', 'area_id', 'promo_discount'], 'id=' . $id, 'orders');
+        $res_order = $this->get_data('orders', 'id=' . $id, $columns = ['final_total', 'total', 'user_id', 'payment_method', 'wallet_balance', 'delivery_charge', 'tax_amount', 'status', 'area_id', 'promo_discount'],);
+
         $sql = 'SELECT oi.*,oi.`product_variant_id`,oi.`quantity`,oi.`discounted_price`,oi.`price`,pv.`product_id`,pv.`type`,pv.`stock`,pv.`stock_unit_id`,pv.`measurement`,pv.`measurement_unit_id` FROM `order_items` oi join `product_variant` pv on pv.id = oi.product_variant_id WHERE oi.`id`=' . $order_item_id;
         $this->db->sql($sql);
         $res_oi = $this->db->getResult();
@@ -1330,16 +1388,26 @@ class custom_functions
             $sql_total = "update orders set total=$total-$price where id=" . $id;
             $this->db->sql($sql_total);
         }
-        $min_amount = $this->get_data($columns = ['minimum_free_delivery_order_amount', 'delivery_charges'], "id=" . $res_order[0]['area_id'], 'area');
-        $res_total = $this->get_data($columns = ['total'], "id=" . $id, 'orders');
-        $total = $res_total[0]['total'];
-        if ($res_order[0]['wallet_balance'] != 0 && $res_order[0]['wallet_balance'] > $res_oi[0]['sub_total'] && strtolower($res_order[0]['payment_method']) == 'cod') {
-            $price = 0;
-        }
 
-        if ($total < $min_amount[0]['minimum_free_delivery_order_amount']) { // $config['min_amount'] = Minimum Amount for Free Delivery
+        $config = $this->get_configurations();
+        $min_amount = $config['min_amount'];
+
+        if ((isset($config['area-wise-delivery-charge']) && !empty($config['area-wise-delivery-charge']))) {
+            $min_amount = $this->get_data('area', "id=" . $res_order[0]['area_id'], $columns = ['minimum_free_delivery_order_amount', 'delivery_charges']);
+            $sql = "select minimum_free_delivery_order_amount,delivery_charges from area where id=" . $res_order[0]['area_id'];
+            $this->db->sql($sql);
+            $result = $this->db->getResult();
+            if (isset($result[0]['minimum_free_delivery_order_amount']) && !empty($result[0]['minimum_free_delivery_order_amount'])) {
+                $min_amount = $result[0]['minimum_free_delivery_order_amount'];
+                $dchrg = $result[0]['delivery_charges'];
+            }
+        }
+        $res_total = $this->get_data('orders', "id=" . $id, $columns = ['total']);
+        $total = $res_total[0]['total'];
+
+        if ($total < $min_amount) { // $config['min_amount'] = Minimum Amount for Free Delivery
             if ($delivery_charge == 0) {
-                $dchrg = $min_amount[0]['delivery_charges'];
+
                 $sql_delivery_chrg = "update orders set delivery_charge=$dchrg where id=" . $id;
                 $this->db->sql($sql_delivery_chrg);
                 $sql_final_total = "update orders set final_total=$final_total-$price+$dchrg where id=" . $id;
@@ -1351,27 +1419,48 @@ class custom_functions
             $sql_final_total = "update orders set final_total=$final_total-$price where id=" . $id;
         }
 
+
+        if ($res_order[0]['wallet_balance'] != 0  && strtolower($res_order[0]['payment_method']) == 'wallet') {
+            $sql_final_total = "update orders set final_total=0 where id=" . $id;
+        }
         if ($this->db->sql($sql_final_total)) {
             if (strtolower($res_order[0]['payment_method']) != 'cod') {
                 /* update user's wallet */
                 $user_id = $res_order[0]['user_id'];
-                $res_order[0]['tax_amount'] . "total" . $res_order[0]['total'] . "d_charge" . $res_order[0]['delivery_charge'];
-                $total_amount = ($res_order[0]['total'] + $res_order[0]['delivery_charge']) - $res_order[0]['promo_discount'];
+                $total_amount = ($res_oi[0]['sub_total'] + $res_order[0]['delivery_charge']) - $res_order[0]['promo_discount'];
                 $user_wallet_balance = $this->get_wallet_balance($user_id, 'users');
                 $new_balance = $user_wallet_balance + $total_amount;
                 $this->update_wallet_balance($new_balance, $user_id, 'users');
-                $wallet_txn_id = $this->add_wallet_transaction($id, $order_item_id, $user_id, 'credit', $total_amount, 'Balance credited against item cancellation...', 'wallet_transactions');
+                $wallet_txn_id = $this->add_wallet_transaction('wallet_transactions', 'credit', $total_amount, $id, $order_item_id, $user_id,  'Balance credited against item cancellation...');
             } else {
                 if ($res_order[0]['wallet_balance'] != 0) {
-                   
-                    $user_id = $res_order[0]['user_id'];
-                    $user_wallet_balance = $this->get_wallet_balance($user_id, 'users');
-                    // $new_balance = ($user_wallet_balance + $res_order[0]['wallet_balance']);
-                    $new_balance = ($user_wallet_balance + $res_oi[0]['sub_total']);
-                    $this->update_wallet_balance($new_balance, $user_id, 'users');
-                    $wallet_txn_id = $this->add_wallet_transaction($id, $order_item_id, $user_id, 'credit', $res_oi[0]['sub_total'], 'Balance credited against item cancellation!!', 'wallet_transactions');
+                    if ($res_order[0]['wallet_balance'] >= $res_oi[0]['sub_total']) {
+                        $returnable_amount = $res_oi[0]['sub_total'];
+                        $amount = $res_order[0]['wallet_balance'] - $returnable_amount;
+                        $sql_total = "update orders set wallet_balance=" . $amount . " where id=" . $id;
+                        $user_id = $res_order[0]['user_id'];
+                        $user_wallet_balance = $this->get_wallet_balance($user_id, 'users');
+                        $new_balance = ($user_wallet_balance + $returnable_amount);
+                        $this->update_wallet_balance($new_balance, $user_id, 'users');
+                        $wallet_txn_id = $this->add_wallet_transaction('wallet_transactions', 'credit', $returnable_amount, $id, $order_item_id, $user_id,  'Balance credited against item cancellation!!');
+                        $this->db->sql($sql_total);
+                        $sql_final_total = "update orders set final_total=final_total+$returnable_amount where id=" . $id;
+                        $this->db->sql($sql_final_total);
+                    } else {
+                        $returnable_amount = $res_order[0]['wallet_balance'];
+                        $user_id = $res_order[0]['user_id'];
+                        $user_wallet_balance = $this->get_wallet_balance($user_id, 'users');
+                        $new_balance = ($user_wallet_balance + $returnable_amount);
+                        $this->update_wallet_balance($new_balance, $user_id, 'users');
+                        $wallet_txn_id = $this->add_wallet_transaction('wallet_transactions', 'credit', $returnable_amount, $id, $order_item_id, $user_id,  'Balance credited against item cancellation!!');
+                        $sql_total = "update orders set wallet_balance=0 where id=" . $id;
+                        $this->db->sql($sql_total);
+                        $sql_final_total = "update orde rs set final_total=final_total+$returnable_amount where id=" . $id;
+                        $this->db->sql($sql_final_total);
+                    }
                 }
             }
+
             if ($res_oi[0]['type'] == 'packet') {
                 $sql = "UPDATE product_variant SET stock = stock + " . $res_oi[0]['quantity'] . " WHERE id='" . $res_oi[0]['product_variant_id'] . "'";
                 $this->db->sql($sql);
@@ -1412,14 +1501,25 @@ class custom_functions
 
     public function get_user_address($address_id)
     {
-        $address_data = $this->get_data($columns = ['mobile', 'latitude', 'longitude', 'address', 'pincode_id', 'area_id', 'landmark', 'state', 'country'], "id=" . $address_id, 'user_addresses');
-        if ($address_data[0]['pincode_id'] == "" || $address_data[0]['area_id'] == "") {
+
+        $address_data = $this->get_data('user_addresses', "id=" . $address_id, $columns = ['area', 'city', 'pincode', 'mobile', 'latitude', 'longitude', 'address', 'pincode_id', 'area_id', 'landmark', 'state', 'country']);
+        // print_r($address_data);
+        if (($address_data[0]['pincode_id'] == "" && $address_data[0]['area_id'] == "") && ($address_data[0]['pincode'] == "" && $address_data[0]['area'] == "")) {
             return false;
         }
         if (!empty($address_data)) {
-            $area = $this->get_data($columns = ['name'], 'id=' . $address_data[0]['area_id'], 'area');
-            $pincodes = $this->get_data($columns = ['pincode', 'city'], 'id=' . $address_data[0]['pincode_id'], 'pincodes');
-            $user_address = $address_data[0]['address'] . "," . $address_data[0]['landmark'] . "," . $pincodes[0]['city'] . "," . $area[0]['name'] . "," . $address_data[0]['state'] . "," . $address_data[0]['country'] . "," . "Pincode:" . $pincodes[0]['pincode'];
+
+            if (!empty($address_data[0]['pincode_id']) && !empty($address_data[0]['area_id'])) {
+                $area = $this->get_data('area', 'id=' . $address_data[0]['area_id'], $columns = ['name']);
+                // print_r($area);
+                $sql = "SELECT a.*,c.name as city_name,p.pincode FROM `area` a LEFT JOIN pincodes p on p.id=a.pincode_id LEFT JOIN cities c on c.id=a.city_id where a.id= " . $address_data[0]['area_id'];
+                $this->db->sql($sql);
+                $res_city = $this->db->getResult();
+            }
+            $city = ($res_city[0]['city_id'] == 0) ? $address_data[0]['city'] : $res_city[0]['city_name'];
+            $area = ($address_data[0]['area_id'] == 0) ? $address_data[0]['area'] : $area[0]['name'];
+            $pincode = ($address_data[0]['pincode_id'] == 0) ? $address_data[0]['pincode'] : $res_city[0]['pincode'];
+            $user_address = $address_data[0]['address'] . "," . $address_data[0]['landmark'] . "," . $city . "," . $area . "," . $address_data[0]['state'] . "," . $address_data[0]['country'] . "," . "Pincode:" . $pincode;
             $order_data = array('user_address' => $user_address, 'mobile' => $address_data[0]['mobile'], 'latitude' => $address_data[0]['latitude'], 'longitude' => $address_data[0]['longitude'], 'pincode_id' => $address_data[0]['pincode_id'], 'area_id' => $address_data[0]['area_id']);
             return $order_data;
         } else {
@@ -1427,9 +1527,9 @@ class custom_functions
             return false;
         }
     }
-    public function send_notification_to_seller($sid, $title, $message, $type, $id)
+    public function send_notification_to_seller($sid, $title, $message, $type, $id, $ignore_method = 0)
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' || $ignore_method == 1) {
             //hecking the required params 
             //creating a new push
             /*dynamically getting the domain of the app*/
@@ -1464,7 +1564,7 @@ class custom_functions
             $firebase = new Firebase();
 
             //sending push notification and displaying result 
-            $firebase->send($token, $mPushNotification);
+            $res = $firebase->send($token, $mPushNotification);
             $response['error'] = false;
             $response['message'] = "Successfully Send";
         } else {
@@ -1522,13 +1622,25 @@ class custom_functions
     public function delete_product($product_id)
     {
         if ($this->check_for_return_request($product_id, 0)) {
-            $sql = "SELECT id,`product_ids`, REPLACE(`product_ids`,'$product_id','') as replaced FROM sections";
+
+            $sql = "SELECT * FROM `sections` where find_in_set($product_id,product_ids)";
             $this->db->sql($sql);
             $section = $this->db->getResult();
             foreach ($section as $row) {
-                $replaced = preg_replace("/,+/", ",", trim($row['replaced'], ","));
-                $sql = "UPDATE `sections` SET `product_ids` = '$replaced' WHERE product_ids LIKE '%$product_id%'";
-                $this->db->sql($sql);
+                $product_ids = explode(',', $row['product_ids']);
+                if (($key = array_search($product_id, $product_ids)) !== false) {
+                    unset($product_ids[$key]);
+                }
+
+                if (!empty($product_ids)) {
+                    $product_ids = implode(',', $product_ids);
+
+                    $sql = "UPDATE `sections` SET `product_ids` = '$product_ids' WHERE id=" . $row['id'];
+                    $this->db->sql($sql);
+                } else {
+                    $sql = "DELETE FROM sections WHERE id=" . $row['id'];
+                    $this->db->sql($sql);
+                }
             }
 
             $sql_query = "DELETE FROM product_variant WHERE product_id=" . $product_id;
@@ -1569,13 +1681,13 @@ class custom_functions
             return false;
         }
     }
-    public function get_customer_privacy($seller_id)
+    public function get_seller_permission($seller_id, $permission)
     {
-        $sql = "SELECT customer_privacy from seller where id=$seller_id";
+        $sql = "SELECT " . $permission . " from seller where id=$seller_id";
         $this->db->sql($sql);
         $res = $this->db->getResult();
         if (!empty($res)) {
-            if ($res[0]['customer_privacy'] == 1) {
+            if ($res[0][$permission] == 1) {
                 return true;
             } else {
                 return false;
@@ -1600,15 +1712,58 @@ class custom_functions
     public function delete_order($order_id)
     {
         if ($this->check_for_return_request(0, $order_id)) {
-            $sql_query = "DELETE FROM orders WHERE ID =" . $order_id;
-            $this->db->sql($sql_query);
-            $sql = "DELETE FROM order_items WHERE order_id =" . $order_id;
-            $this->db->sql($sql);
-            $sql_return = "DELETE FROM return_requests WHERE order_id =" . $order_id;
-            $this->db->sql($sql_return);
-            return true;
+            $sql_query = "DELETE FROM orders WHERE id =" . $order_id;
+            if ($this->db->sql($sql_query)) {
+                $sql = "DELETE FROM order_items WHERE order_id =" . $order_id;
+                $this->db->sql($sql);
+                $sql_return = "DELETE FROM return_requests WHERE order_id =" . $order_id;
+                $this->db->sql($sql_return);
+                return true;
+            } else {
+                return false;
+            }
         } else {
             return false;
+        }
+    }
+    public function delete_order_item($order_item_id)
+    {
+
+        $sql_i = "SELECT id,status,order_id FROM `return_requests` where order_item_id=" . $order_item_id;
+        $this->db->sql($sql_i);
+        $return_res = $this->db->getResult();
+        if (!empty($return_res)) {
+            if ($return_res[0]['status'] == 1) {
+                $sql = "DELETE FROM order_items WHERE id =" . $order_item_id;
+                $this->db->sql($sql);
+                $sql_return = "DELETE FROM return_requests WHERE order_item_id =" . $order_item_id;
+                $this->db->sql($sql_return);
+                $sql_i = "SELECT id FROM `order_items` where order_id=" . $return_res[0]['order_id'];
+                $this->db->sql($sql_i);
+                $res_order = $this->db->getResult();
+                if (empty($res_order)) {
+                    $this->delete_order($return_res[0]['order_id']);
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            $sql_i = "SELECT order_id FROM `order_items` where id=" . $order_item_id;
+            $this->db->sql($sql_i);
+            $res_order_id = $this->db->getResult();
+            $sql = "DELETE FROM order_items WHERE id =" . $order_item_id;
+            if ($this->db->sql($sql)) {
+                $sql_i = "SELECT id FROM `order_items` where order_id=" . $res_order_id[0]['order_id'];
+                $this->db->sql($sql_i);
+                $res_order = $this->db->getResult();
+                if (empty($res_order)) {
+                    $this->delete_order($res_order_id[0]['order_id']);
+                }
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
@@ -1675,6 +1830,9 @@ class custom_functions
         $other_images = json_encode(array_values($other_images)); /*convert back to JSON */
 
         /*update the table*/
+        if (empty($other_images) || $other_images == '[]') {
+            $sql = "UPDATE `products` set `other_images`='' where id=" . $pid;
+        }
         $sql = "UPDATE `products` set `other_images`='" . $other_images . "' where id=" . $pid;
         if ($this->db->sql($sql))
             return 1;
@@ -1687,6 +1845,22 @@ class custom_functions
         $sql = "SELECT id FROM product_variant WHERE id=" . $v_id;
         $this->db->sql($sql);
         $res = $this->db->getResult();
+
+        $sql_query = "SELECT images FROM product_variant WHERE id =" . $v_id;
+        $this->db->sql($sql_query);
+        $result = $this->db->getResult();
+
+        foreach ($result as $row)
+            $other_images = $row['images']; /*get other images json array*/
+        if (!empty($other_images)) {
+            $variant_images = str_replace("'", '"', $other_images);
+            $other_images = json_decode($variant_images); /*decode from json to array*/
+            foreach ($other_images as $other_image) {
+                $image =  '../../' . $other_image;
+                file_exists($image) ? unlink('../../' . $other_image) : unlink("../" . $other_image); /*remove the image from the folder*/
+            }
+        }
+
         if (!empty($res)) {
             $sql = "DELETE FROM product_variant WHERE id=" . $v_id;
             if ($this->db->sql($sql)) {
@@ -1698,5 +1872,716 @@ class custom_functions
             return false;
         }
     }
+    public function get_seller_address($seller_id)
+    {
+        $res_seller = $this->get_data('seller', "id=" . $seller_id, $columns = ['name', 'mobile', 'latitude', 'longitude', 'state', 'street', 'pincode_id', 'city_id']);
+
+        $res_pincode = $this->get_data('pincodes', "id=" . $res_seller[0]['pincode_id'], $columns = ['pincode']);
+        $res_city = $this->get_data('cities', "id=" . $res_seller[0]['city_id'], $columns = ['name']);
+        $city_name = (!empty($res_city[0]['name'])) ? $res_city[0]['name'] . " - " : "";
+        $state = (!empty($res_seller[0]['state'])) ? $res_seller[0]['state'] . ", " : "";
+        $street = (!empty($res_seller[0]['street'])) ? $res_seller[0]['street'] . ", " : "";
+        $pincode = (!empty($res_seller[0]['pincode_id']) && !empty($res_pincode)) ? $city_name . $res_pincode[0]['pincode'] : "";
+        $seller_address = $state  . $street . $pincode;
+        if (!empty($seller_address)) {
+            return $seller_address;
+        } else {
+            return false;
+        }
+    }
+    public function add_transaction($amount, $order_id = "", $id = "", $type = '',  $message = '', $date = '', $status = 1)
+    {
+        $date = !empty($date) ? $date : date('Y-m-d H:i:s');
+        $data = array(
+            'order_id' => $order_id,
+            'user_id' => $id,
+            'type' => $type,
+            'amount' => $amount,
+            'message' => $message,
+            'transaction_date' => $date,
+            'status' => $status
+        );
+        $this->db->insert('transactions', $data);
+        $result = $this->db->getResult()[0];
+        return (!empty($result)) ? $result : "0";
+    }
+    public function get_delivery_charge($address_id, $total = 0)
+    {
+        $total = str_replace(',', '', $total);
+        $config = $this->get_configurations();
+        $address = $this->get_data('user_addresses', 'id=' . $address_id, ['area_id']);
+        $min_amount = $config['min_amount'];
+        $delivery_charge = $config['delivery_charge'];
+        if ((isset($config['area-wise-delivery-charge']) && !empty($config['area-wise-delivery-charge']))) {
+            if (isset($address[0]['area_id']) && !empty($address[0]['area_id'])) {
+                $area = $this->get_data('area', 'id=' . $address[0]['area_id'], ['delivery_charges', 'minimum_free_delivery_order_amount']);
+                if (isset($area[0]['minimum_free_delivery_order_amount'])) {
+                    $min_amount = $area[0]['minimum_free_delivery_order_amount'];
+                    $delivery_charge = $area[0]['delivery_charges'];
+                }
+            }
+        }
+        if ($total < $min_amount || $total == 0) {
+            $d_charge = $delivery_charge;
+        } else {
+            $d_charge = 0;
+        }
+        return $d_charge;
+    }
+    public function is_item_available_in_save_for_later($user_id, $product_variant_id = "")
+    {
+        $sql = "SELECT id FROM cart WHERE user_id=" . $user_id;
+        $sql .= !empty($product_variant_id) ? " AND product_variant_id=" . $product_variant_id : "";
+        $this->db->sql($sql);
+        $res = $this->db->getResult();
+        if (!empty($res)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    public function get_item_wise_delivery_charge($product_variant_id, $passed_pincode_id)
+    {
+        $sql = 'select p.standard_shipping,pv.price,pv.discounted_price from product_variant pv left join products p on p.id=pv.product_id where pv.id=' . $product_variant_id;
+        $this->db->sql($sql);
+        $res = $this->db->getResult();
+    }
+
+    public function delete_variant_images($vid, $i)
+    {
+        $sql = "SELECT images FROM product_variant WHERE id =" . $vid;
+        $this->db->sql($sql);
+        $res = $this->db->getResult();
+        foreach ($res as $row)
+            $other_images = $row['images']; /*get images json array*/
+        if (!empty($other_images)) {
+            $variant_images = str_replace("'", '"', $other_images);
+            $other_images = json_decode($variant_images); /*decode from json to array*/
+
+            $image =  '../../' . $other_images[$i];
+            file_exists($image) ? unlink('../../' . $other_images[$i]) : unlink("../" . $other_images[$i]); /*remove the image from the folder*/
+            unset($other_images[$i]); /*remove image from the array*/
+            $res_other_images = json_encode(array_values($other_images)); /*convert back to JSON */
+
+            /*update the table*/
+            $sql = "UPDATE `product_variant` set `images`='" . $res_other_images . "' where id=" . $vid;
+            if ($this->db->sql($sql))
+                return 1;
+            else
+                return 0;
+        }
+    }
+    public function get_offers($position, $section_position = '')
+    {
+        if (!empty($section_position)) {
+            $sql = "SELECT * FROM offers WHERE position = '" . $position . "' AND section_position = '" . $section_position . "' ";
+        } else {
+            $sql = "SELECT * FROM offers WHERE position = '" . $position . "' ";
+        }
+        $this->db->sql($sql);
+        $res = $this->db->getResult();
+        return $res;
+    }
+    public function process_shiprocket($order_id, $seller_id, $pickup_location, $sub_total, $weight, $height, $breadth, $length, $order_items_ids)
+    {
+
+        $fn = new functions();
+        $shiprocket = new Shiprocket();
+        $order_items_arr = $orders = $order_items = $parcels = array();
+        $order_items_ids = implode(',', $order_items_ids);
+
+        $sr_subtotal = $sr_weight = $sr_height = $sr_length = $sr_breadth = 0;
+        $sql = 'SELECT oi.id as item_id,oi.quantity, oi.tax_percentage,oi.tax_amount, p.seller_id,p.id,pv.weight,p.name,p.standard_shipping,oi.price,oi.discounted_price,p.pickup_location  FROM `order_items` oi left JOIN product_variant pv on oi.product_variant_id=pv.id left join products p on p.id=pv.product_id WHERE  oi.id    in(' . $order_items_ids . ') and oi.order_id=' . $order_id;
+        $this->db->sql($sql);
+        $order_res = $this->db->getResult();
+
+        $sql = 'SELECT o.user_id,o.payment_method,  o.pincode_id,o.area_id,CASE WHEN o.pincode_id=0 THEN (Select ua.pincode from user_addresses ua where ua.id=o.address_id) ELSE (Select pin.pincode from pincodes pin where pin.id=o.pincode_id) END AS pincode,CASE WHEN o.area_id=0 THEN (Select ua.area from user_addresses ua where ua.id=o.address_id) ELSE (Select a.name from area a where a.id=o.area_id) END AS area from orders o where id=' . $order_id;
+        $this->db->sql($sql);
+        $pincode = $this->db->getResult();
+
+        $sql = 'SELECT (Select u.name from users u where u.id=ua.user_id) as user_name,(Select u.email from users u where u.id=ua.user_id) as email,ua.mobile,ua.address,ua.state,ua.country,(select c.name from cities c where c.id=ua.city_id) as city from user_addresses ua where ua.user_id=' . $pincode[0]['user_id'] . ' AND ua.pincode_id=' . $pincode[0]['pincode_id'] . ' AND ua.area_id=' . $pincode[0]['area_id'];
+        $this->db->sql($sql);
+        $users_details = $this->db->getResult();
+        $payment_method = (isset($pincode[0]['payment_method']) && !empty($pincode[0]['payment_method']) && strtolower($pincode[0]['payment_method']) == "cod") ? 0 : 1;
+        $order_id_create_order = $order_id;
+        $index = 0;
+        foreach ($order_res as  $items) {
+            if ($items['standard_shipping']) {
+                $slug = $items['item_id'] . " " . $order_id . " " . $index;
+                $final_price = (isset($items['discounted_price']) && $items['discounted_price'] > 0 && $items['discounted_price'] < $items['price']) ? $items['discounted_price'] : $items['price'];
+                $final_price = $final_price + $items['tax_amount'];
+
+                $order_items[] = array(
+                    // 'name' => $items['name'],
+                    'name' => (strlen($items['name']) > 200) ? substr($items['name'], 0, 200) : $items['name'],
+                    'sku' => $fn->slugify($slug),
+                    'units' => $items['quantity'],
+                    'selling_price' => $final_price,
+                    'tax' => $items['tax_percentage']
+                );
+                $order_id_create_order .= '-' . $items['id'];
+                $index++;
+            }
+        }
+        $sql = 'SELECT pin_code from pickup_locations where pickup_location="' . $pickup_location . '"';
+        $this->db->sql($sql);
+        $pickup_location_pincode = $this->db->getResult();
+        if (!empty($pickup_location_pincode)) {
+            $data = array('pickup_location' => $pickup_location_pincode[0]['pin_code'], 'delivery_pincode' => $pincode[0]['pincode'], 'weight' => $weight, 'cod' => ($payment_method == 0) ? '1' : '0');
+            $check_deliveribility = $shiprocket->check_serviceability($data);
+            $get_currier_id = $this->shiprocket_recomended_data($check_deliveribility);
+        }
+        $shiprocket_settings = $this->get_settings('shiprocket', true);
+        // print_r($shiprocket_settings);
+
+        $data = array(
+            'order_id' => $order_id_create_order,
+            'order_date' => date('y-m-d'),
+            'pickup_location' => $pickup_location,
+            'billing_customer_name' => $users_details[0]['user_name'],
+            'billing_last_name' => $users_details[0]['user_name'],
+            'billing_address' => $pincode[0]['area'],
+            'billing_phone' => $users_details[0]['mobile'],
+            'billing_city' => $users_details[0]['city'],
+            'billing_pincode' => $pincode[0]['pincode'],
+            'billing_state' => $users_details[0]['state'],
+            'billing_country' => $users_details[0]['country'],
+            'billing_email' => $users_details[0]['email'],
+            'shipping_is_billing' => true,
+            "order_items" => $order_items,
+            'payment_method' => ($payment_method == 0) ? 'COD' : 'prepaid', // change as required
+            'sub_total' => (isset($shiprocket_settings['free_delivery_charge']) && $shiprocket_settings['free_delivery_charge'] == "1" && $sub_total >= $shiprocket_settings['minimum_oredr_amount']) ? $sub_total : $sub_total + isset($get_currier_id['rate']),
+            'length' => $length,
+            'breadth' => $breadth,
+            'height' => $height,
+            'weight' => $weight
+        );
+
+
+        $res = $shiprocket->create_order($data);
+        // print_r($res);
+        if ($res['status_code'] == 1 || !empty($res['order_id'])) {
+            $item_id = 0;
+            $shiprocket_order_id = isset($res['order_id']) ? $res['order_id'] : '';
+            $shipment_id = isset($res['shipment_id']) ? $res['shipment_id'] : '';
+            $courier_company_id = isset($get_currier_id['courier_company_id']) ? $get_currier_id['courier_company_id'] : "";
+            foreach ($order_res as  $items) {
+                if ($items['standard_shipping']) {
+                    $item_id = $items['item_id'];
+                    $sql = "INSERT INTO `order_trackings` (`order_id`,`order_item_id`,`shiprocket_order_id`,`shipment_id`,`courier_company_id`) VALUES ('$order_id','$item_id','$shiprocket_order_id','$shipment_id','$courier_company_id')";
+                    $this->db->sql($sql);
+                }
+            }
+            return $res;
+        } elseif ($res['status_code'] != 1 || !empty($res['status_code'])) {
+            $res['data'] = $res;
+
+            $res['message'] = $res['message'];
+            return $res;
+        } else {
+            return $res;
+        }
+    }
+
+
+    // public function return_order($order_item_id)
+    // {
+    //     $fn = new functions();
+    //     $shiprocket = new Shiprocket();
+    //     $order_item_data=$this->get_data(['*'], 'id='.$item_id,'order_items');
+    //     print_r($order_item_data);
+
+    // }
+
+
+
+
+    public function send_request_for_pickup($shipment_id)
+    {
+        $shiprocket = new Shiprocket();
+        $res = $shiprocket->request_for_pickup($shipment_id);
+        // print_r($res);
+        if ($res['pickup_status'] == 1) {
+            $pickup_scheduled_date = $res['response']['pickup_scheduled_date'];
+            $pickup_token_number = $res['response']['pickup_token_number'];
+            $status = $res['response']['status'];
+            $others = $res['response']['others'];
+            $pickup_generated_date = json_encode($res['response']['pickup_generated_date']);
+            $data = $res['response']['data'];
+            $sql = "UPDATE order_trackings SET `pickup_status`=1 ,`pickup_scheduled_date`='$pickup_scheduled_date',`pickup_token_number`='$pickup_token_number',`status`='$status',`others`='$others',`pickup_generated_date`='$pickup_generated_date',`data`='$data' where shipment_id=$shipment_id ";
+            $this->db->sql($sql);
+            $sql = "select `pickup_status` from `order_trackings` where `shipment_id`='$shipment_id'";
+            $this->db->sql($sql);
+            $result = $this->db->getResult();
+            return true;
+        } else if ($res['pickup_status'] == 0) {
+            $sql = "UPDATE order_trackings SET `pickup_status`=1  where shipment_id='$shipment_id' ";
+            $this->db->sql($sql);
+            return true;
+        } else if ($res['status_code'] == 400) {
+            $sql = "UPDATE order_trackings SET `pickup_status`=1  where shipment_id='$shipment_id' ";
+            $this->db->sql($sql);
+            $res['pickup_status'] == 1;
+            return  true;
+        } else {
+            return $res;
+        }
+    }
+
+
+    public function generate_manifests($shipment_id)
+    {
+        $shiprocket = new Shiprocket();
+        $manifest = $shiprocket->generate_manifests($shipment_id);
+        if ($manifest['status'] == '1') {
+            $manifest = json_encode($manifest);
+            $sql = "UPDATE order_trackings SET manifests='$manifest' where shipment_id='$shipment_id'";
+            if ($this->db->sql($sql)) {
+                $error['error'] = false;
+                $error['message'] = "manifest generated successfully";
+            } else {
+                $error['error'] = true;
+                $error['message'] = "somethings get wrong";
+            }
+        } else if (!empty($manifest['already_manifested_shipment_ids'])) {
+
+            $order_id = $this->get_data('order_trackings', "shipment_id=$shipment_id", ['shiprocket_order_id']);
+            $manifest = $shiprocket->print_manifests($order_id[0]['shiprocket_order_id']);
+            $manifest = [
+                'status' => 1,
+                'manifest_url' => $manifest['manifest_url']
+            ];
+            $manifest = json_encode($manifest);
+            $sql = "UPDATE order_trackings SET manifests='$manifest' where shipment_id='$shipment_id'";
+            if ($this->db->sql($sql)) {
+                $error['error'] = false;
+                $error['message'] = "manifest generated successfully";
+            } else {
+                $error['error'] = true;
+                $error['message'] = "somethings get wrong";
+            }
+        } else {
+            $error['error'] = true;
+            $error['message'] = "somethings get wrong";
+        }
+        return $error;
+    }
+    public function generate_labels($shipment_id)
+    {
+        $shiprocket = new Shiprocket();
+        $label = $shiprocket->generate_label($shipment_id);
+        // print_r($label);
+        if ($label['label_created'] == '1') {
+            $label = json_encode($label);
+            $sql = "UPDATE order_trackings SET labels='$label' where shipment_id=$shipment_id";
+            if ($this->db->sql($sql)) {
+                $error['error'] = false;
+                $error['message'] = "manifest generated successfully";
+            } else {
+                $error['error'] = true;
+                $error['message'] = "somethings get wrong";
+            }
+        } else {
+            $error['error'] = true;
+            $error['message'] = "somethings get wrong";
+        }
+        return $error;
+    }
+
+
+    public function generate_awb($shipment_id)
+    {
+        $shiprocket = new Shiprocket();
+        $where = 'shipment_id=' . $shipment_id;
+        $get_currier_id = $this->get_data('order_trackings', $where, ['courier_company_id']);
+        $courier_company_id = $get_currier_id[0]['courier_company_id'];
+        $awb = $shiprocket->generate_awb($shipment_id);
+        // print_r($awb);
+
+        // echo $awb['awb_assign_status'];
+        if ($awb['awb_assign_status'] == 1) {
+
+            $awb_code = $this->get_order($shipment_id)['data']['shipments']['awb'];
+            $sql = "UPDATE order_trackings SET `awb_code`='$awb_code' where shipment_id='$shipment_id' ";
+            $this->db->sql($sql);
+            $res['error'] = false;
+            $res['message'] = "AWB generated succssfully";
+            // $res['data'] = $awb;
+
+            return $res;
+        } else if ($awb['status_code'] == 350) {
+            $res['error'] = true;
+            $res['message'] = $awb['message'];
+            // $res['data'] = $awb;
+            return $res;
+        } else if ($awb['status_code'] == 400) {
+            $res['error'] = true;
+            $res['message'] = $awb['message'];
+            return $res;
+        } else if (!empty($this->get_order($shipment_id))) {
+            $awb_code = $this->get_order($shipment_id)['data']['shipments']['awb'];
+            $sql = "UPDATE order_trackings SET `awb_code`='$awb_code' where `shipment_id`='$shipment_id' ";
+            $this->db->sql($sql);
+            $res['error'] = false;
+            $res['message'] = "AWB generated succssfully";
+            // $res['data'] = $awb;
+            return $res;
+        } else if ($awb['awb_assign_status'] == 0) {
+            $res['error'] = true;
+            $res['message'] = $awb['response']['data']['awb_assign_error'];
+            // $res['data'] = $awb;
+            return $res;
+        } else {
+            $res['error'] = true;
+            $res['message'] = $awb['message'];
+            // $res['data'] = $awb;
+            return $res;
+        }
+    }
+
+    public function get_order($shipment_id)
+    {
+
+        $shiprocket = new Shiprocket;
+        $order_id = $this->get_data('order_trackings', 'shipment_id=' . $shipment_id, ['shiprocket_order_id'])[0]['shiprocket_order_id'];
+        $order_details = $shiprocket->get_order($order_id);
+        return $order_details;
+    }
+
+    public function get_shipment_details($shipment_id)
+    {
+        $shiprocket = new Shiprocket;
+        $shipment_details = $shiprocket->get_shipment_details($shipment_id);
+        return $shipment_details;
+    }
+    public function track_order($shipment_id)
+    {
+        $shiprocket = new Shiprocket();
+        $track_order = $shiprocket->track_order($shipment_id);
+        if ($track_order['tracking_data']['track_status']) {
+            return $track_order;
+        } else {
+            $res['message'] = $track_order['tracking_data']['error'];
+            return $res;
+        }
+    }
+
+    public function shiprocket_recomended_data($shiprocket_data)
+    {
+        $result = array();
+        if (isset($shiprocket_data['data']['recommended_courier_company_id'])) {
+            foreach ($shiprocket_data['data']['available_courier_companies'] as  $rd) {
+                if ($shiprocket_data['data']['recommended_courier_company_id'] == $rd['courier_company_id']) {
+                    $result = $rd;
+                    break;
+                }
+            }
+        } else {
+            //print_r($shiprocket_data);
+            foreach ($shiprocket_data['data']['available_courier_companies'] as  $rd) {
+                if ($rd['courier_company_id']) {
+                    $result = $rd;
+                    break;
+                }
+            }
+        }
+        return $result;
+    }
+
+
+
+    // make shipping parcel of product 
+    public function make_shipping_parcels($data)
+    {
+        // find unique seller from given data
+        $seller_id = array_unique(array_column($data, 'seller_id'));
+        $parcels = $pickup_locations = $test = $temp = array();
+        //store standard shipping weight
+        $local_shipping_total_item_weight = 0;
+        // store local shipping weight
+        foreach ($data as $value) {
+            for ($i = 0; $i < count($value['item']); $i++)
+                $temp[] = $value['item'][$i];
+        }
+        $unique_pickup_location = array_unique(array_column($temp, 'pickup_location'));
+        $shipping_parcels = array();
+        foreach ($data as $product) {
+            for ($i = 0; $i < count($product['item']); $i++) {
+                if ($product['item'][$i]['standard_shipping'] && !empty($product['item'][$i]['pickup_location'])) {
+
+                    if (!isset($parcels[$product['item'][$i]['pickup_location']][$product['seller_id']]['weight'])) {
+                        $parcels[$product['item'][$i]['pickup_location']][$product['seller_id']]['weight'] = 0;
+                    }
+                    $parcels[$product['item'][$i]['pickup_location']][$product['seller_id']]['weight'] = (isset($parcels[$product['item'][$i]['pickup_location']][$product['seller_id']]['weight']) && !empty($product['item'][$i]['weight'])) ? $parcels[$product['item'][$i]['pickup_location']][$product['seller_id']]['weight'] + ($product['item'][$i]['weight'] * $product['qty']) : $product['item'][$i]['weight'] * $product['qty'];
+                }
+            }
+        }
+        return $parcels;
+    }
+
+
+    public function check_parcels_deliveriblity($data, $user_pincode, $is_cod = 0)
+    {
+        $min_days = $max_days = $delivery_charge_with_cod  = $delivery_charge_without_cod = 0;
+        $shiprocket = new Shiprocket;
+        /**
+         * Parcels
+         * Array
+         * (
+         *    pickup-location-slug-seller_id
+         *    [rainbow-textiles-26] => Array
+         *        (
+         *               seller_id
+         *                [26] => Array
+         *                (
+         *                    [weight] => 0.015
+         *                )
+         *        )
+         * )
+         */
+
+        foreach ($data as $pickup_location => $parcels) {
+            foreach ($parcels as $seller_id => $parcel) {
+                $pin_code = $this->get_data('pickup_locations', "pickup_location='" . $pickup_location . "'", ['pin_code']);
+
+                $shiprocket_data = array('pickup_location' => $pin_code[0]['pin_code'], 'delivery_pincode' => $user_pincode, 'weight' => $parcel['weight'], 'cod' => 0);
+                // print_r($shiprocket_data);
+                $shiprocket_data = $shiprocket->check_serviceability($shiprocket_data);
+                $shiprocket_data = $this->shiprocket_recomended_data($shiprocket_data);
+
+                $shiprocket_data_with_cod = array('pickup_location' => $pin_code[0]['pin_code'], 'delivery_pincode' => $user_pincode, 'weight' => $parcel['weight'], 'cod' => 1);
+                $shiprocket_data_with_cod = $shiprocket->check_serviceability($shiprocket_data_with_cod);
+                $shiprocket_data_with_cod = $this->shiprocket_recomended_data($shiprocket_data_with_cod);
+
+                $data[$pickup_location][$seller_id]['pickup_availability'] = $shiprocket_data['pickup_availability'];
+                $data[$pickup_location][$seller_id]['courier_name'] = $shiprocket_data['courier_name'];
+                $data[$pickup_location][$seller_id]['delivery_charge_with_cod'] = $shiprocket_data_with_cod['rate'];
+                $data[$pickup_location][$seller_id]['delivery_charge_without_cod'] = $shiprocket_data['rate'];
+                $data[$pickup_location][$seller_id]['estimate_date'] = $shiprocket_data['etd'];
+                $data[$pickup_location][$seller_id]['estimate_days'] = $shiprocket_data['estimated_delivery_days'];
+
+                $min_days = (empty($min_days) || $shiprocket_data['estimated_delivery_days'] < $min_days) ? $shiprocket_data['estimated_delivery_days'] : $min_days;
+                $max_days = (empty($max_days) || $shiprocket_data['estimated_delivery_days'] > $max_days) ? $shiprocket_data['estimated_delivery_days'] : $max_days;
+
+                $delivery_charge_with_cod += $data[$pickup_location][$seller_id]['delivery_charge_with_cod'];
+                $delivery_charge_without_cod += $data[$pickup_location][$seller_id]['delivery_charge_without_cod'];
+            }
+        }
+
+        $delivery_day = ($min_days == $max_days) ? $min_days : $min_days . '-' . $max_days;
+        $shipping_parcels = array('error' => false, 'estimated_delivery_days' => $delivery_day,  'delivery_charge' => 0, 'delivery_charge_with_cod' => round($delivery_charge_with_cod), 'delivery_charge_without_cod' => round($delivery_charge_without_cod), 'data' => $data);
+        return $shipping_parcels;
+    }
+
+
+    public function get_taxabled_amount($product_varient_id)
+    {
+        $sql = "SELECT pv.id,pv.discounted_price,t.percentage,pv.price,CASE when t.percentage != 0 THEN (pv.price+(pv.price*t.percentage)/100) ELSE pv.price END AS taxable_price,CASE when pv.discounted_price !=0 THEN pv.discounted_price+(pv.discounted_price*t.percentage)/100 ELSE pv.price+(pv.price*t.percentage)/100 END as taxable_amount from product_variant pv left JOIN products p on pv.product_id=p.id LEFT JOIN taxes t on t.id=p.tax_id where pv.id=$product_varient_id";
+        $this->db->sql($sql);
+        $result = $this->db->getResult();
+        if (empty($result[0]['percentage']) && $result[0]['discounted_price'] != 0) {
+            $result[0]['taxable_amount'] = $result[0]['discounted_price'];
+        } else if (empty($result[0]['percentage'])) {
+            $result[0]['taxable_amount'] = $result[0]['price'];
+        }
+        return $result;
+    }
+
+    public function get_orders($user_id, $order_id, $limit, $offset)
+    {
+        $where = !empty($order_id) ? " AND o.id = " . $order_id : "";
+        $sql = "select count(o.id) as total from orders o where user_id=" . $user_id . $where;
+        $this->db->sql($sql);
+        $res = $this->db->getResult();
+        $total = $res[0]['total'];
+        $sql = "select o.*,obt.message as bank_transfer_message,obt.status as bank_transfer_status,(select name from users u where u.id=o.user_id) as user_name from orders o LEFT JOIN order_bank_transfers obt ON obt.order_id=o.id where user_id=" . $user_id . $where . " ORDER BY date_added DESC LIMIT $offset,$limit";
+        $this->db->sql($sql);
+        $res = $this->db->getResult();
+        $i = 0;
+        $j = 0;
+        // return false;
+        foreach ($res as $row) {
+
+            // echo "meri ek tang nakli hain me hoki ka bohot bada khiladi hun";
+            $final_sub_total = 0;
+            $sub_total = 0;
+
+            if ($row['discount'] > 0) {
+                $discounted_amount = $row['total'] * $row['discount'] / 100;
+                $final_total = $row['total'] - $discounted_amount;
+                $discount_in_rupees = $row['total'] - $final_total;
+            } else {
+                $discount_in_rupees = 0;
+            }
+
+            $sql_query = "SELECT id,attachment FROM order_bank_transfers WHERE order_id = " . $row['id'];
+            $this->db->sql($sql_query);
+            $res_attac = $this->db->getResult();
+
+            $myData = array();
+            foreach ($res_attac as $item) {
+                array_push($myData, ['id' => $item['id'], 'image' => DOMAIN_URL . $item['attachment']]);
+            }
+            $body1 = json_encode($myData);
+            $body = json_decode($body1);
+
+            $res[$i]['attachment'] = $body;
+
+            $res[$i]['discount_rupees'] = "$discount_in_rupees";
+            $final_total = ceil($res[$i]['final_total']);
+            $res[$i]['final_total'] = "$final_total";
+            $res[$i]['date_added'] = date('d-m-Y h:i:sa', strtotime($res[$i]['date_added']));
+            $res[$i]['bank_transfer_message'] = !empty($res[$i]['bank_transfer_message']) ? $res[$i]['bank_transfer_message'] : "";
+            $res[$i]['bank_transfer_status'] = !empty($res[$i]['bank_transfer_status']) ? $res[$i]['bank_transfer_status'] : "0";
+            $sql = "select oi.*,v.id as variant_id, p.name,p.image,p.manufacturer,p.standard_shipping,p.made_in,p.return_status,p.cancelable_status,p.till_status,v.measurement,(select short_code from unit u where u.id=v.measurement_unit_id) as unit from order_items oi join product_variant v on oi.product_variant_id=v.id join products p on p.id=v.product_id where order_id=" . $row['id'];
+            $this->db->sql($sql);
+            $res[$i]['items'] = $this->db->getResult();
+            $res[$i]['status'] = json_decode($res[$i]['status']);
+            for ($j = 0; $j < count($res[$i]['items']); $j++) {
+
+                // unset($res[$i][$j]['status']);
+                if ($res[$i]['items'][$j]['standard_shipping'] == 1) {
+                    $res[$i]['items'][$j]['shipping_method'] = 'standard';
+                    $res[$i]['status'] = "";
+                    $res[$i]['active_status'] = "";
+                    $res[$i]['items'][$j]['status'] = "";
+                    $order_tracking = $this->get_data('order_trackings', 'order_item_id=' . $res[$i]['items'][$j]['id'], ['*']);
+                    if ($res[$i]['items'][$j]['active_status'] != 'cancelled' && $res[$i]['items'][$j]['active_status'] != 'returned') {
+                        $final_sub_total += $res[$i]['items'][$j]['sub_total'];
+                        $sub_total += $res[$i]['items'][$j]['sub_total'];
+                    }
+                    if (!empty($res[$i]['items'][$j]['status'])) {
+                        if (count($res[$i]['items'][$j]['status']) > 1) {
+                            if (in_array("awaiting_payment", $res[$i]['items'][$j]['status'][0]) && in_array("received", $res[$i]['items'][$j]['status'][1])) {
+                                unset($res[$i]['items'][$j]['status'][0]);
+                            }
+                            $res[$i]['items'][$j]['status'] = array_values($res[$i]['items'][$j]['status']);
+                        }
+                    } else {
+                        $res[$i]['items'][$j]['status'] = array();
+                    }
+
+                    $res[$i]['items'][$j]['delivery_boy_id'] = (!empty($res[$i]['items'][$j]['delivery_boy_id'])) ? $res[$i]['items'][$j]['delivery_boy_id'] : "";
+                    if (!empty($res[$i]['items'][$j]['seller_id'])) {
+                        $seller_info = $this->get_data('seller', "id=" . $res[$i]['items'][$j]['seller_id'], $columns = ['name', 'store_name']);
+                        $res[$i]['items'][$j]['seller_name'] = $seller_info[0]['name'];
+                        $res[$i]['items'][$j]['seller_store_name'] = $seller_info[0]['store_name'];
+                    } else {
+                        $res[$i]['items'][$j]['seller_id'] = "";
+                        $res[$i]['items'][$j]['seller_name'] = "";
+                        $res[$i]['items'][$j]['seller_store_name'] = "";
+                    }
+                    $item_details = $this->get_product_by_variant_id2($res[$i]['items'][$j]['product_variant_id']);
+                    $res[$i]['items'][$j]['return_days'] = ($item_details['return_days'] != "") ? $item_details['return_days'] : '0';
+                    $res[$i]['items'][$j]['image'] = DOMAIN_URL . $res[$i]['items'][$j]['image'];
+                    $sql = "SELECT id from return_requests where product_variant_id = " . $res[$i]['items'][$j]['variant_id'] . " AND user_id = " . $user_id;
+                    $this->db->sql($sql);
+                    $return_request = $this->db->getResult();
+
+                    $order_tracking_data = $this->get_data('order_trackings', 'order_item_id=' . $res[$i]['items'][$j]['id'], ['*']);
+                    if (empty($order_tracking_data)) {
+                        $res[$i]['items'][$j]['active_status'] = 'Order not created';
+                        $res[$i]['items'][$j]['shipment_id'] = "";
+                        $res[$i]['items'][$j]['awb_code'] = "";
+                        $res[$i]['items'][$j]['pickup_status'] = "";
+                        $res[$i]['items'][$j]['is_canceled'] = "";
+                    } else if (!empty($order_tracking_data[0]['shipment_id']) && empty($order_tracking_data[0]['awb_code'])) {
+                        $res[$i]['items'][$j]['active_status'] = 'AWb not generated';
+                        $res[$i]['items'][$j]['shipment_id'] = $order_tracking_data[0]['shipment_id'];
+                        $res[$i]['items'][$j]['awb_code'] = "";
+                        $res[$i]['items'][$j]['pickup_status'] = "";
+                        $res[$i]['items'][$j]['is_canceled'] = "";
+                    } else if (!empty($order_tracking_data[0]['shipment_id']) && !empty($order_tracking_data[0]['awb_code']) && $order_tracking_data[0]['pickup_status'] == 0 && $order_tracking_data[0]['is_canceled'] == 0) {
+                        $res[$i]['items'][$j]['active_status'] = 'Send request for pickup pending';
+                        $res[$i]['items'][$j]['shipment_id'] = $order_tracking_data[0]['shipment_id'];
+                        $res[$i]['items'][$j]['awb_code'] = isset($order_tracking_data[0]['awb_code']) ? $order_tracking_data[0]['awb_code'] : "0";
+                        $res[$i]['items'][$j]['pickup_status'] = "1";
+                        $res[$i]['items'][$j]['is_canceled'] = "";
+                    } else if ($order_tracking_data[0]['is_canceled'] == 1 && !empty($order_tracking_data[0]['shipment_id']) && !empty($order_tracking_data[0]['awb_code']) && $order_tracking_data[0]['pickup_status'] == 1) {
+                        $res[$i]['items'][$j]['active_status'] = 'Order is canclled';
+                        $res[$i]['items'][$j]['shipment_id'] = $order_tracking_data[0]['shipment_id'];
+                        $res[$i]['items'][$j]['awb_code'] = isset($order_tracking_data[0]['awb_code']) ? $order_tracking_data[0]['awb_code'] : "0";
+                        $res[$i]['items'][$j]['pickup_status'] = "1";
+                        $res[$i]['items'][$j]['is_canceled'] = "1";
+                    } else {
+                        $res[$i]['items'][$j]['active_status'] = 'Order Ready for tracking';
+                        $res[$i]['items'][$j]['shipment_id'] = $order_tracking_data[0]['shipment_id'];
+                        $res[$i]['items'][$j]['awb_code'] = isset($order_tracking_data[0]['awb_code']) ? $order_tracking_data[0]['awb_code'] : "0";
+                        $res[$i]['items'][$j]['pickup_status'] = "1";
+                        $res[$i]['items'][$j]['is_canceled'] = "";
+                    }
+                } else {
+                    $res[$i]['items'][$j]['shipping_method'] = 'local';
+                    $res[$i]['items'][$j]['status'] = (!empty($res[$i]['items'][$j]['status'])) ? json_decode($res[$i]['items'][$j]['status']) : array();
+                    if ($res[$i]['items'][$j]['active_status'] != 'cancelled' && $res[$i]['items'][$j]['active_status'] != 'returned') {
+                        $final_sub_total += $res[$i]['items'][$j]['sub_total'];
+                        $sub_total += $res[$i]['items'][$j]['sub_total'];
+                    }
+                    if (!empty($res[$i]['items'][$j]['status'])) {
+                        if (count($res[$i]['items'][$j]['status']) > 1) {
+                            if (in_array("awaiting_payment", $res[$i]['items'][$j]['status'][0]) && in_array("received", $res[$i]['items'][$j]['status'][1])) {
+                                unset($res[$i]['items'][$j]['status'][0]);
+                            }
+                            $res[$i]['items'][$j]['status'] = array_values($res[$i]['items'][$j]['status']);
+                        }
+                    } else {
+                        $res[$i]['items'][$j]['status'] = array();
+                    }
+
+                    $res[$i]['items'][$j]['delivery_boy_id'] = (!empty($res[$i]['items'][$j]['delivery_boy_id'])) ? $res[$i]['items'][$j]['delivery_boy_id'] : "";
+                    if (!empty($res[$i]['items'][$j]['seller_id'])) {
+                        $seller_info = $this->get_data('seller', "id=" . $res[$i]['items'][$j]['seller_id'], $columns = ['name', 'store_name']);
+                        $res[$i]['items'][$j]['seller_name'] = $seller_info[0]['name'];
+                        $res[$i]['items'][$j]['seller_store_name'] = $seller_info[0]['store_name'];
+                    } else {
+                        $res[$i]['items'][$j]['seller_id'] = "";
+                        $res[$i]['items'][$j]['seller_name'] = "";
+                        $res[$i]['items'][$j]['seller_store_name'] = "";
+                    }
+                    $item_details = $this->get_product_by_variant_id2($res[$i]['items'][$j]['product_variant_id']);
+                    $res[$i]['items'][$j]['return_days'] = ($item_details['return_days'] != "") ? $item_details['return_days'] : '0';
+                    $res[$i]['items'][$j]['image'] = DOMAIN_URL . $res[$i]['items'][$j]['image'];
+                    $sql = "SELECT id from return_requests where product_variant_id = " . $res[$i]['items'][$j]['variant_id'] . " AND user_id = " . $user_id;
+                    $this->db->sql($sql);
+                    $return_request = $this->db->getResult();
+                    if (empty($return_request)) {
+                        $res[$i]['items'][$j]['applied_for_return'] = false;
+                    } else {
+                        $res[$i]['items'][$j]['applied_for_return'] = true;
+                    }
+                    $res[$i]['items'][$j]['shipment_id'] = "0";
+                }
+            }
+
+            $res[$i]['final_total'] = strval($row['final_total']);
+            $res[$i]['total'] = strval($row['total']);
+            $i++;
+        }
+        $orders = $order = array();
+
+        if (!empty($res)) {
+            $orders['error'] = false;
+            $orders['total'] = $total;
+            $orders['data'] = array_values($res);
+            return $orders;
+        } else {
+            $res['error'] = true;
+            $res['message'] = "No orders found!";
+            return $res;
+        }
+    }
+
+    public function get_maintenance_mode($app_name)
+    {
+        $mode = $this->get_data('settings', 'variable="maintenance_mode"', ['*'])[0];
+        $mode = (array) json_decode($mode['value']);
+        foreach ($mode as $app => $value) {
+            if ($app_name == $app) {
+                $mode = $value;
+            }
+        }
+        if ($mode == [] || $mode == 0)
+            $mode = "0";
+        return $mode;
+    }
 }
-// $this->db->disconnect();
