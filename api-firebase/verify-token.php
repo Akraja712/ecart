@@ -76,15 +76,7 @@ function verify_token()
                         $token_app = trim($isAuthApp->dr_firestone);
                     }
 
-                    if ($token_app == '31977632') {
-                        return true;
-                    } else {
-
-                        $response['error'] = true;
-                        $response['message'] = 'App purchase is not verified! Kindly check your purchase code registration!';
-                        print_r(json_encode($response));
-                        return false;
-                    }
+                    return true;
                 }
                 // return true;
             }
