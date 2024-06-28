@@ -22,15 +22,15 @@ if (isset($config['system_timezone']) && isset($config['system_timezone_gmt'])) 
     $db->sql("SET `time_zone` = '+05:30'");
 }
 include('../includes/variables.php');
-// if (!verify_token()) {
-//     return false;
-// }
-// if (!isset($_POST['accesskey'])  || trim($_POST['accesskey']) != $access_key) {
-//     $response['error'] = true;
-//     $response['message'] = "No Accsess key found!";
-//     print_r(json_encode($response));
-//     return false;
-// }
+if (!verify_token()) {
+    return false;
+}
+if (!isset($_POST['accesskey'])  || trim($_POST['accesskey']) != $access_key) {
+    $response['error'] = true;
+    $response['message'] = "No Accsess key found!";
+    print_r(json_encode($response));
+    return false;
+}
 /*
 1.get-categories
     accesskey:90336

@@ -109,7 +109,7 @@ $res_logo = $db->getResult();
     $('#reset_password_form').on('submit', function(e) {
         e.preventDefault();
         <?php
-            if(ALLOW_MODIFICATION==0 && !defined (ALLOW_MODIFICATION)){
+            if (defined('ALLOW_MODIFICATION') && ALLOW_MODIFICATION == 0) {
 				echo '<label class="alert alert-danger">This operation is not allowed in demo panel!.</label>';
 				return false;
 			}

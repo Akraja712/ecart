@@ -1,4 +1,6 @@
 <?php
+
+
 session_start();
 include_once('includes/custom-functions.php');
 $fn = new custom_functions;
@@ -26,6 +28,30 @@ include "header.php"; ?>
 
 <head>
     <title>Store Information | <?= $settings['app_name'] ?> - Dashboard</title>
+    <style>
+        .asterik {
+            font-size: 20px;
+            line-height: 0px;
+            vertical-align: middle;
+        }
+
+        .tox .tox-menubar {
+            background-color: #e7e8e7;
+            display: flex;
+            flex: 0 0 auto;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            padding: 0 4px 0 4px;
+        }
+
+        .tox .tox-notification--warn,
+        .tox .tox-notification--warning {
+            background-color: #fffaea;
+            border-color: #ffe89d;
+            color: #222f3e;
+            display: none;
+        }
+    </style>
 </head>
 </body>
 <!-- Content Wrapper. Contains page content -->
@@ -36,11 +62,11 @@ include "header.php"; ?>
     $res = $db->getResult();
     $message = '';
     if (isset($_POST['btn_update'])) {
-        if(ALLOW_MODIFICATION==0 && !defined (ALLOW_MODIFICATION)){
+        if (defined('ALLOW_MODIFICATION') && ALLOW_MODIFICATION == 0) {
             echo '<label class="alert alert-danger">This operation is not allowed in demo panel!.</label>';
             return false;
         }
-        if($permissions['settings']['update']==1){
+        if ($permissions['settings']['update'] == 1) {
             if (!empty($_POST['about_us'])) {
 
                 $about_us = $db->escapeString($fn->xss_clean($_POST['about_us']));
@@ -68,34 +94,34 @@ include "header.php"; ?>
     <section class="content">
         <div class="row">
             <div class="col-md-12">
-            <?php if($permissions['settings']['read']==1){
-                        if($permissions['settings']['update']==0) { ?>
-                            <div class="alert alert-danger">You have no permission to update settings</div>
-                        <?php } ?>
-                <!-- general form elements -->
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Update Information</h3>
-                    </div>
-                    <!-- /.box-header -->
-                    <!-- form start -->
-                    <form method="post" enctype="multipart/form-data">
-                        <div class="box-body">
-                            <div class="form-group">
-                                <label for="app_name">About US :</label>
-                                <textarea rows="10" cols="10" class="form-control" name="about_us" id="about_us" required><?= $res[0]['value'] ?></textarea>
+                <?php if ($permissions['settings']['read'] == 1) {
+                    if ($permissions['settings']['update'] == 0) { ?>
+                        <div class="alert alert-danger">You have no permission to update settings</div>
+                    <?php } ?>
+                    <!-- general form elements -->
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <h3 class="box-title">Update Information</h3>
+                        </div>
+                        <!-- /.box-header -->
+                        <!-- form start -->
+                        <form method="post" enctype="multipart/form-data">
+                            <div class="box-body">
+                                <div class="form-group">
+                                    <label for="app_name">About US :</label><i class="address_note"></i>
+                                    <textarea rows="10" cols="10" class="form-control addr_editor" name="about_us" id="about_us" required><?= $res[0]['value'] ?></textarea>
+                                </div>
                             </div>
-                        </div>
-                        <!-- /.box-body -->
-                        <div class="box-footer">
-                            <input type="submit" class="btn-primary btn" value="Update" name="btn_update" />
-                        </div>
-                    </form>
+                            <!-- /.box-body -->
+                            <div class="box-footer">
+                                <input type="submit" class="btn-primary btn" value="Update" name="btn_update" />
+                            </div>
+                        </form>
                     <?php } else { ?>
-                                <div class="alert alert-danger">You have no permission to view settings</div>
-                             <?php } ?>
-                </div>
-                <!-- /.box -->
+                        <div class="alert alert-danger">You have no permission to view settings</div>
+                    <?php } ?>
+                    </div>
+                    <!-- /.box -->
             </div>
         </div>
     </section>
@@ -107,5 +133,10 @@ include "header.php"; ?>
 <?php include "footer.php"; ?>
 <script type="text/javascript" src="css/js/ckeditor/ckeditor.js"></script>
 <script type="text/javascript">
-    CKEDITOR.replace('about_us');
+    $(document).ready(function() {
+        ltr = '<svg width="20" height="20"><path d="M11 5h7a1 1 0 010 2h-1v11a1 1 0 01-2 0V7h-2v11a1 1 0 01-2 0v-6c-.5 0-1 0-1.4-.3A3.4 3.4 0 017.8 10a3.3 3.3 0 010-2.8 3.4 3.4 0 011.8-1.8L11 5zM4.4 16.2L6.2 15l-1.8-1.2a1 1 0 011.2-1.6l3 2a1 1 0 010 1.6l-3 2a1 1 0 11-1.2-1.6z" fill-rule="evenodd"></path></svg>';
+        rtl = '<svg width="20" height="20"><path d="M8 5h8v2h-2v12h-2V7h-2v12H8v-7c-.5 0-1 0-1.4-.3A3.4 3.4 0 014.8 10a3.3 3.3 0 010-2.8 3.4 3.4 0 011.8-1.8L8 5zm12 11.2a1 1 0 11-1 1.6l-3-2a1 1 0 010-1.6l3-2a1 1 0 111 1.6L18.4 15l1.8 1.2z" fill-rule="evenodd"></path></svg>';
+        html = '( Use ' + ltr + ' for LTR and use ' + rtl + ' for RTL )';
+        $('.address_note').append(html);
+    });
 </script>

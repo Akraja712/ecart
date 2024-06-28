@@ -58,7 +58,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.js"></script>
 
     <script src="plugins/select2/select2.min.js"></script>
-
+    <script>
+        tinymce.init({
+            selector: '.addr_editor',
+            height: 300,
+            menubar: true,
+            plugins: [
+                'advlist autolink lists charmap print preview anchor',
+                'searchreplace visualblocks code fullscreen',
+                'insertdatetime table paste code help wordcount directionality'
+            ],
+            directionality: 'ltr',
+            toolbar: 'undo redo | formatselect | fontsizeselect |' +
+                'bold italic backcolor | alignleft aligncenter ' +
+                'alignright alignjustify | bullist numlist outdent indent | ltr rtl |' +
+                'removeformat | help',
+            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+        });
+    </script>
     <script>
         $(function() {
             //Initialize Select2 Elements

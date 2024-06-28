@@ -7,4 +7,3 @@
 	unset($_SESSION['timeout']);
 // 	session_destroy();
 	header("location:index.php");
-?>

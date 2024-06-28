@@ -7,7 +7,7 @@ Steps to bulk upload of products
 
         Product Name * -> Name of the product. 
         Category ID * -> Category ID of the product (You can find Category ID in Categories section).
-        Subcategory ID * -> Subcategory ID of the product (You can find Subcategory ID in Subcategories section).
+        Subcategory ID -> Subcategory ID of the product (You can find Subcategory ID in Subcategories section).
         Indicator * -> 0 - None, 1 - Veg, 2 - Non-Veg.
         Manufacturer -> Manufacturer of the product.
         Made in -> Product Made In.
@@ -21,7 +21,7 @@ Steps to bulk upload of products
                             "included" - for product is delivarable in these included pincodes which are in Database.
                             "excluded" - for product is delivarable except this pincodes which are in Database.
         Pincodes -> pincode_id list as per the above option(Deliverable_Type) you selected. And it should be comma separated like 1,2,3
-
+        tax_id -> Leave it blank if don't want to apply tax. You can find tax_id from products > taxes section
         -> Add following columns for varients of products. you need to add this columns in continued(You can check example on sample file)
         -> for example, If you want to add 3 varients then you need to add this column 3 times. Product must have 1 varient. 
 
@@ -36,4 +36,3 @@ Steps to bulk upload of products
 
         Note - It is necessary to fill in one of the fields from Deliverable_Type and Pincodes.
         Note - Do not set empty field. if you have no value on specific column then add "0"(zero) in that column.
-

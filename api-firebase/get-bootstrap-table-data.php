@@ -2084,14 +2084,14 @@ if (isset($_GET['table']) && $_GET['table'] == 'seller') {
     $path = 'upload/seller/';
     foreach ($res as $row) {
         $categories = array();
-        /*if (isset($row['categories']) && $row['categories'] != '') {
+        if (isset($row['categories']) && $row['categories'] != '') {
             $res = explode(',', $row['categories']);
 
             for ($i = 0; $i < count($res); $i++) {
                 $cate_name = $fn->get_data('category', "id=" . $res[$i], $column = ['name', 'id']);
                 $categories[] = $res[$i] . ' - ' . $cate_name[0]['name'] . '<br>';
             }
-        }*/
+        }
         $json = json_encode($categories);
         $json = json_decode($json);
 

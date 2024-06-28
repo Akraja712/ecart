@@ -25,7 +25,7 @@ $_SESSION['timeout'] = $currentTime + $expired;
 <head>
     <title>Order Details | <?= $settings['app_name'] ?> - Dashboard</title>
     <style>
-        
+
     </style>
 </head>
 

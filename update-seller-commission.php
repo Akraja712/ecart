@@ -18,46 +18,35 @@ if (isset($config['system_timezone']) && isset($config['system_timezone_gmt'])) 
 }
 
 /* get order items with not credited commission */
-$sql = "SELECT oi.id,date(oi.date_added) as order_date,oi.order_id,oi.product_variant_id,oi.seller_id,oi.sub_total,p.return_days FROM `order_items` oi left JOIN product_variant pv ON pv.id=oi.product_variant_id JOIN products p on p.id=pv.product_id where is_credited=0 ORDER BY oi.`id` DESC";
+$date = date('Y-m-d');
+$sql = "SELECT c.id as category_id, oi.id,date(oi.date_added) as order_date,oi.order_id,oi.product_variant_id,oi.seller_id,oi.sub_total,p.return_days FROM `order_items` oi left JOIN product_variant pv ON pv.id=oi.product_variant_id JOIN products p on p.id=pv.product_id JOIN category c ON p.category_id=c.id where oi.active_status='delivered' AND is_credited=0 and  DATE_ADD(DATE_FORMAT(oi.date_added, '%Y-%m-%d'), INTERVAL p.return_days DAY) < '" . $date . "' ORDER BY oi.`id` DESC";
 $db->sql($sql);
 $result = $db->getResult();
-$todays_date =  date('Y-m-d');
-foreach ($result as $row) {
-    /* get product return policy */
-    $number_of_days = ($row['return_days'] == "" || empty($row['return_days'])) ? 0 : $row['return_days'];
-    $return_policy_expire_date = date('Y-m-d', strtotime($row['order_date'] . ' + '.$number_of_days.' days')) ;
-
-    /* check whether policy expires or not */
-    if($todays_date > $return_policy_expire_date){
-        $seller_info = $fn->get_data($columns = ['commission','email','name'],"id=".$row['seller_id'],"seller");
-        $final_commission = 100 - $seller_info[0]['commission'];
-        $transfer_amt = ($final_commission * $row['sub_total']) / 100 ;
-
+if (!empty($result)) {
+    foreach ($result as $row) {
+        $seller_info = $fn->get_data("seller", "id=" . $row['seller_id'], $columns = ['commission', 'email', 'name']);
+        $commission = $fn->get_data('seller_commission', "seller_id='" . $row['seller_id'] . "' and category_id='" . $row['category_id'] . "'", $columns = ['commission']);
+        $commission_perct = isset($commission[0]['commission']) && $commission[0]['commission'] > 0 ? $commission[0]['commission'] : $seller_info[0]['commission'];
+        $commission_amt = $row['sub_total'] / 100 * $commission_perct;
+        $transfer_amt = $row['sub_total'] - $commission_amt;
         /* get seller balance */
         $user_wallet_balance = $fn->get_wallet_balance($row['seller_id'], 'seller');
         $amt = ($transfer_amt + $user_wallet_balance);
-        
-        /* update seller commission */
-        if($fn->update_wallet_balance($amt, $row['seller_id'], 'seller')){
-           $sql = "UPDATE order_items SET is_credited=1 where id=".$row['id'];
-           if($db->sql($sql)){
-            $wallet_txn_id = $fn->add_wallet_transaction($row['order_id'], $row['id'], $row['seller_id'], 'credit', $transfer_amt, 'Commission', 'seller_wallet_transactions');
-            if(!empty($wallet_txn_id)){
-                /* send notification  */
-                $message = "Dear, ". ucwords($seller_info[0]['name']) ." Commission for  order item  ID : #" . $row['id'] . " was transfered. Please take note of it.";
-                $fn->send_notification_to_seller($row['seller_id'], "Commission Transfered", $message, 'order', $row['id']);
-                echo "success  ";
-            }else{
-                echo "Commission not transfered to ".$seller_info[0]['name'];
-            }
-           }else{
-               echo "not updated";
-           }
-        }else{
-            echo "no";
-        }
-    }else{
-        // echo "  not now  ";
-    }
 
+        /* update seller commission */
+        if ($fn->update_wallet_balance($amt, $row['seller_id'], 'seller')) {
+            $sql = "UPDATE order_items SET is_credited = 1 where id=" . $row['id'];
+            if ($db->sql($sql)) {
+                $wallet_txn_id = $fn->add_wallet_transaction('seller_wallet_transactions', 'credit', $transfer_amt, $row['order_id'], $row['id'], $row['seller_id'],  'Commission');
+                if (!empty($wallet_txn_id)) {
+                    /* send notification  */
+                    $message = "Dear, " . ucwords($seller_info[0]['name']) . " Commission for  order item  ID : #" . $row['id'] . " was transfered. Please take note of it.";
+                    $fn->send_notification_to_seller($row['seller_id'], "Commission Transfered", $message, 'order', $row['id'], $ignore_method = 1);
+                }
+            }
+        }
+    }
+    echo 'Seller(s) commission updated successfully';
+} else {
+    echo 'Seller(s) commission already updated';
 }

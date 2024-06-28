@@ -67,8 +67,8 @@ $res_logo = $db->getResult();
     <!-- general form elements -->
     <div class='row'>
         <div class="col-md-12 text-center">
-            <img src="dist/img/new.jpeg" height="110">
-            <h3>GPN Collection Dashboard</h3>
+            <img src="<?= DOMAIN_URL . 'dist/img/' . $res_logo[0]['value'] ?>" height="110">
+            <h3><?= $settings['app_name'] ?> Dashboard</h3>
         </div>
         <div class="box box-info col-md-12">
             <div class="box-header with-border">

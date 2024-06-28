@@ -1,26 +1,27 @@
-<?php 
+<?php
 session_start();
-    ob_start(); 
-    include_once('includes/crud.php');
-    $db = new Database;
-    include_once('includes/custom-functions.php');
-    $fn = new custom_functions();
-    $db->connect();
-    date_default_timezone_set('Asia/Kolkata');
-    $sql = "SELECT * FROM settings";
-    $db->sql($sql);
-    $res = $db->getResult();
-    $settings = json_decode($res[5]['value'],1);
-    $logo = $fn->get_settings('logo');
-    
-    ?>
+ob_start();
+include_once('includes/crud.php');
+$db = new Database;
+include_once('includes/custom-functions.php');
+$fn = new custom_functions();
+$db->connect();
+date_default_timezone_set('Asia/Kolkata');
+$sql = "SELECT * FROM settings";
+$db->sql($sql);
+$res = $db->getResult();
+$settings = json_decode($res[5]['value'], 1);
+$logo = $fn->get_settings('logo');
+
+?>
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<link rel="icon" type="image/ico" href="<?= DOMAIN_URL . 'dist/img/'.$logo?>">
-	<title>Forgot Password - <?=$settings['app_name']?></title>
+    <link rel="icon" type="image/ico" href="<?= DOMAIN_URL . 'dist/img/' . $logo ?>">
+    <title>Forgot Password - <?= $settings['app_name'] ?></title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <!-- Bootstrap 3.3.5 -->
@@ -53,10 +54,10 @@ session_start();
         <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
-  </head>
+</head>
 </body>
-      <!-- Content Wrapper. Contains page content -->
-      <?php $sql_logo = "select value from `settings` where variable='Logo' OR variable='logo'";
+<!-- Content Wrapper. Contains page content -->
+<?php $sql_logo = "select value from `settings` where variable='Logo' OR variable='logo'";
 $db->sql($sql_logo);
 $res_logo = $db->getResult();
 ?>
@@ -103,32 +104,33 @@ $res_logo = $db->getResult();
     $('#forgot_password_form').on('submit', function(e) {
         e.preventDefault();
         <?php
-            if(ALLOW_MODIFICATION==0 && !defined (ALLOW_MODIFICATION)){
-				echo '<label class="alert alert-danger">This operation is not allowed in demo panel!.</label>';
-				return false;
-			}
+        if (defined('ALLOW_MODIFICATION') && ALLOW_MODIFICATION == 0) {
+            echo '<label class="alert alert-danger">This operation is not allowed in demo panel!.</label>';
+            return false;
+        }
         ?>
         var formData = new FormData(this);
         if ($("#forgot_password_form").validate().form()) {
-                $.ajax({
-                    type: 'POST',
-                    url: $(this).attr('action'),
-                    data: formData,
-                    beforeSend: function() {
-                        $('#submit_btn').html('Please wait..');
-                    },
-                    cache: false,
-                    contentType: false,
-                    processData: false,
-                    success: function(result) {
-                        $('#result').html(result);
-                        $('#result').show().delay(6000).fadeOut();
-                        $('#submit_btn').html('Submit');
-                        $('#forgot_password_form')[0].reset();
-                    }
-                });
+            $.ajax({
+                type: 'POST',
+                url: $(this).attr('action'),
+                data: formData,
+                beforeSend: function() {
+                    $('#submit_btn').html('Please wait..');
+                },
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(result) {
+                    $('#result').html(result);
+                    $('#result').show().delay(6000).fadeOut();
+                    $('#submit_btn').html('Submit');
+                    $('#forgot_password_form')[0].reset();
+                }
+            });
         }
     });
 </script>
-  </body>
+</body>
+
 </html>

@@ -25,13 +25,21 @@ foreach ($words as $w) {
 }
 
 $currency = $fn->get_settings('currency');
+$shippint_type = $fn->get_settings('local_shipping');
 $settings['currency'] = $currency;
 $isAuth = $fn->get_settings('doctor_brown');
+$isAuthWeb = $fn->get_settings('doctor_brown_web');
 $cal_time_check = $time_check = '';
 if (!empty($isAuth)) {
     $isAuth = json_decode($isAuth);
     $time_check = $isAuth->time_check;
-    $str = trim($isAuth->code_bravo) . "|" . trim($isAuth->code_adam) . "|" . trim($isAuth->dr_firestone);
+    $str = trim($isAuth->code_bravo) . "|" . trim($isAuth->code_adam) . "|" . trim($isAuth->dr_firestone) . "|" . trim(DOMAIN_URL);
+    $cal_time_check = hash('sha256', $str);
+}
+if (!empty($isAuthWeb)) {
+    $isAuthWeb = json_decode($isAuthWeb);
+    $time_check = $isAuthWeb->time_check;
+    $str = trim($isAuthWeb->code_bravo) . "|" . trim($isAuthWeb->code_adam) . "|" . trim($isAuthWeb->dr_firestone) . "|" . trim(DOMAIN_URL);
     $cal_time_check = hash('sha256', $str);
 }
 
@@ -46,12 +54,13 @@ $res_logo = $db->getResult();
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link rel="icon" type="image/ico" href="dist/img/new.jpeg">
+    <link rel="icon" type="image/ico" href="<?= 'dist/img/' . $res_logo[0]['value'] ?>">
     <!-- Tell the browser to be responsive to screen width -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
 
     <!-- Bootstrap 3.3.5 -->
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap/css/custom.css">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
     <!-- Ionicons -->
@@ -61,6 +70,9 @@ $res_logo = $db->getResult();
     <!-- Theme style -->
     <link rel="stylesheet" href="dist/css/AdminLTE.min.css">
     <link href="dist/css/multiple-select.css" rel="stylesheet" />
+
+    <script src="dist/js/v5.tinymce.min.js"></script>
+
     <!--<link rel="stylesheet" href="plugins/select2/select2.min.css">-->
     <!--	 <link rel="stylesheet" href="plugins/select2/select2.min.css">=
         <link rel="stylesheet" href="plugins/select2/select2.css">-->
@@ -128,7 +140,22 @@ $res_logo = $db->getResult();
 
 <body class="hold-transition skin-blue fixed sidebar-mini">
     <div class="wrapper">
+        <?php
+        if ($time_check != $cal_time_check || empty($cal_time_check) || empty($time_check)) {
+            $file = basename($_SERVER['PHP_SELF']);
 
+            if ($file != 'purchase-code.php') { ?>
+                <div class="overlay" style="background: #000000d9; position: absolute; width: 100%; height: 307%; z-index: 9999999;">
+                    <div class="container text-center " style="background: white; padding: 100px; margin-top: 10%;">
+                        <div>
+                            <h4>Please activate the system use it further</h4>
+                            <a href="purchase-code.php"><i class="fa fa-check"></i> Register system</a>
+                        </div>
+                    </div>
+                </div>
+        <?php exit();
+            }
+        } ?>
         <header class="main-header">
             <!-- Logo -->
             <a href="home.php" class="logo">
@@ -138,7 +165,7 @@ $res_logo = $db->getResult();
                 </span>
                 <!-- logo for regular state and mobile devices -->
                 <span class="logo-lg">
-                    <h3>GPN Collection</h3>
+                    <h3><?= $settings['app_name'] ?></h3>
                 </span>
             </a>
             <!-- Header Navbar: style can be found in header.less -->
@@ -151,6 +178,7 @@ $res_logo = $db->getResult();
                     <ul class="nav navbar-nav">
                         <!-- User Account: style can be found in dropdown.less -->
                         <?php
+                        // print_r($_SESSION);
                         $sql_query = "SELECT * FROM admin where id=" . $_SESSION['id'];
 
                         $db->sql($sql_query);
@@ -217,31 +245,17 @@ $res_logo = $db->getResult();
                         <li><a href="categories-order.php"><i class="fa fa-reorder"></i> Categories Order</a></li>
                     </ul>
                 </li>
+
                 <li class="treeview">
                     <a href="#">
-                        <i class="fa fa-male"></i>
-                        <span>Sellers</span>
+                        <i class="fa fa-bullseye"></i>
+                        <span>Sub Categories</span>
                         <i class="fa fa-angle-right pull-right"></i>
-                        <?php
-                        $query = "select * from seller where status=2 ";
-                        $db->sql($query);
-                        $result = $db->getResult();
-                        $count = $db->numRows($result);
-                        if ($count) { ?>
-                            <span class="label label-primary pull-right"><?php echo $count; ?></span>
-                        <?php    } ?>
                     </a>
                     <ul class="treeview-menu">
-                        <li><a href="sellers.php"><i class="fa fa-sliders"></i> Manage Sellers</a></li>
-                        <!-- <li><a href="seller-transactions.php"><i class="fa fa-exchange"></i> Transactions</a></li> -->
-                        <li><a href="seller-wallet-transactions.php"><i class="fa fa-credit-card"></i> Manage Wallet Transactions</a></li>
-
+                        <li><a href="subcategories.php"><i class="fa fa-sliders"></i> Manage Sub Categories</a></li>
+                        <li><a href="subcategories-order.php"><i class="fa fa-reorder"></i> Sub Categories Order</a></li>
                     </ul>
-                </li>
-                <li>
-                    <a href="subcategories.php">
-                        <i class="fa fa-bullseye"></i> <span>Sub Categories</span>
-                    </a>
                 </li>
 
                 <li class="treeview">
@@ -263,9 +277,30 @@ $res_logo = $db->getResult();
                         <li><a href="products.php"><i class="fa fa-sliders"></i> Manage Products</a></li>
                         <li><a href="media.php"><i class="fa fa-file-image-o"></i> Media</a></li>
                         <li><a href="bulk-upload.php"><i class="fa fa-upload"></i> Bulk Upload</a></li>
-                        <!-- <li><a href="bulk-update.php"><i class="fa fa-pencil"></i> Bulk Update</a></li> -->
+                        <li><a href="bulk-update.php"><i class="fa fa-pencil"></i> Bulk Update</a></li>
                         <li><a href="products-taxes.php"><i class="fa fa-plus"></i> Taxes</a></li>
                         <li><a href="products-order.php"><i class="fa fa-reorder"></i> Products Order</a></li>
+                    </ul>
+                </li>
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-male"></i>
+                        <span>Sellers</span>
+                        <i class="fa fa-angle-right pull-right"></i>
+                        <?php
+                        $query = "select * from seller where status=2 ";
+                        $db->sql($query);
+                        $result = $db->getResult();
+                        $count = $db->numRows($result);
+                        if ($count) { ?>
+                            <span class="label label-primary pull-right"><?php echo $count; ?></span>
+                        <?php    } ?>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a href="sellers.php"><i class="fa fa-sliders"></i> Manage Sellers</a></li>
+                        <!-- <li><a href="seller-transactions.php"><i class="fa fa-exchange"></i> Transactions</a></li> -->
+                        <li><a href="seller-wallet-transactions.php"><i class="fa fa-credit-card"></i> Manage Wallet Transactions</a></li>
+
                     </ul>
                 </li>
                 <li class="treeview">
@@ -313,6 +348,12 @@ $res_logo = $db->getResult();
                     </ul>
                 </li>
                 <li class="treeview">
+                    <a href="newsletter.php">
+                        <i class="fa fa-envelope"></i>
+                        <span>Newsletter</span>
+                    </a>
+                </li>
+                <li class="treeview">
                     <a href="return-requests.php">
                         <i class="fa fa-retweet"></i> <span>Return Requests</span>
                         <?php
@@ -330,43 +371,45 @@ $res_logo = $db->getResult();
                         <i class="fa fa-credit-card"></i> <span> Withdrawal Requests </span>
                     </a>
                 </li>
-                <li class="treeview">
-                    <a href="#">
-                        <i class="fa fa-male"></i>
-                        <span>Delivery Boys</span>
-                        <i class="fa fa-angle-right pull-right"></i>
-                    </a>
-                    <ul class="treeview-menu">
-                        <li><a href="delivery-boys.php"><i class="fa fa-line-chart"></i> Manage Delivery Boys </a></li>
-                        <li><a href="fund-transfers.php"><i class="fa fa-inr"></i> Fund Transfers</a></li>
+                <?php if ($shippint_type) { ?>
+                    <li class="treeview delivery_boy">
+                        <a href="#">
+                            <i class="fa fa-male"></i>
+                            <span>Delivery Boys</span>
+                            <i class="fa fa-angle-right pull-right"></i>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="delivery-boys.php"><i class="fa fa-line-chart"></i> Manage Delivery Boys </a></li>
+                            <li><a href="fund-transfers.php"><i class="fa fa-inr"></i> Fund Transfers</a></li>
+                            <li><a href="delivery-boy-cash.php"><i class="fa fa-money"></i> Delivery boy cash</a></li>
 
-                    </ul>
-                </li>
+                        </ul>
+                    </li>
+
+                <?php } ?>
 
                 <li class="treeview">
                     <a href="notification.php"> <i class="fa fa-share-square-o"></i><span>Send notification</span>
                     </a>
                 </li>
-                <!-- <li class="treeview">
+                <li class="treeview">
                     <a href="#">
                         <i class="fa fa-wrench"></i>
                         <span>Web Front-End Settings</span>
                         <i class="fa fa-angle-right pull-right"></i>
                     </a>
                     <ul class="treeview-menu">
-                        <li><a href="web-header.php"><i class="fa fa-chevron-circle-up"></i> Header</i></a>
-
-                        </li>
+                        <li><a href="web-header.php"><i class="fa fa-chevron-circle-up"></i> Header</i></a></li>
                         <li><a href="web-category.php"><i class="fa fa-picture-o"></i> Category Image </a></li>
-
                         <li class=""><a href="#"><i class="fa fa-chevron-circle-down"></i> Footer <i class="fa fa-angle-right pull-right"></i></a>
                             <ul class="treeview-menu">
                                 <li><a href="social-media.php"><i class="fa fa-facebook"></i> Social Media </a></li>
+                                <li><a href="web-footer.php"><i class="fa fa-life-ring"></i> About </a></li>
                             </ul>
                         </li>
-
+                        <li class="treeview"><a href="front-end-policies.php"><i class="fa fa-money"></i><span>Policies</span></a></li>
                     </ul>
-                </li> -->
+                </li>
                 <li class="treeview">
                     <a href="#">
                         <i class="fa fa-wrench"></i>
@@ -379,12 +422,14 @@ $res_logo = $db->getResult();
                         <li><a href="time-slots.php"><i class="fa fa-clock-o"></i> Time slots </a></li>
                         <li><a href="notification-settings.php"><i class="fa fa-bell-o"></i> Notification Settings</a></li>
                         <li><a href="units.php"><i class="fa fa-dot-circle-o"></i> Units</a></li>
+                        <li class=""><a href="shipping-methods.php"><i class="fa fa-rocket"></i> Shipping Method</a></li>
                         <li><a href="contact-us.php"><i class="fa fa-phone"></i> Contact Us </a></li>
                         <li><a href="privacy-policy.php"><i class="fa fa-user-secret"></i> Privacy Policy </a></li>
                         <li><a href="delivery-boy-privacy-policy.php"><i class="fa fa-exclamation-triangle"></i> Delivery Boy Privacy Policy </a></li>
-                        <li><a href="manager-app-privacy-policy.php"><i class="fa fa-lock"></i> Manager App Privacy Policy </a></li>
                         <li><a href="seller-privacy-policy.php"><i class="fa fa-lock"></i> Seller Privacy Policy </a></li>
+                        <li><a href="api-key.php"><i class="fa fa-lock"></i> Secret Key </a></li>
                         <li><a href="about-us.php"><i class="fa fa-info"></i> About Us </a></li>
+                        <li><a href="update.php"><i class="fa fa-upload"></i> System Updater </a></li>
                         <li><a href="purchase-code.php"><i class="fa fa-check"></i> System Registration </a></li>
 
                     </ul>
@@ -396,8 +441,11 @@ $res_logo = $db->getResult();
                         <i class="fa fa-angle-right pull-right"></i>
                     </a>
                     <ul class="treeview-menu">
-                        <li><a href="pincodes.php"><i class="fa fa-map-pin"></i> Pincodes</a></li>
-                        <li><a href="areas.php"><i class="fa fa-reorder"></i> Areas </a></li>
+                        <li class="pincode"><a href="pincodes.php"><i class="fa fa-map-pin"></i> Pincodes</a></li>
+                        <li class="cities"><a href="city.php"><i class="fa fa-location-arrow"></i> Cities</a></li>
+                        <li class="areas"><a href="areas.php"><i class="fa fa-reorder"></i> Areas </a></li>
+                        <li class="pickup-loacation"><a href="pickup-locations.php"><i class="fa fa-map"></i></i></i> Pickup Locations </a></li>
+                        <li class="location-upload"><a href="location-bulk-upload.php"><i class="fa fa-upload"></i></i></i>Locations Builk Upload</a></li>
                     </ul>
                 </li>
                 <li class="treeview">
@@ -416,7 +464,7 @@ $res_logo = $db->getResult();
                     <a href="faq.php">
                         <i class="fa fa-info"></i> <span>FAQs</span>
                         <?php
-                        $query = "select * from faq where status=1 ";
+                        $query = "select * from faq where status= 2";
                         $db->sql($query);
                         $result = $db->getResult();
                         $count = $db->numRows($result);
@@ -444,6 +492,77 @@ $res_logo = $db->getResult();
             </ul>
             </section>
             <!-- /.sidebar -->
+
+            <?php
+            if ($fn->get_settings('shiprocket', true)) {
+            ?>
+
+                <script>
+                    $(document).ready(function() {
+
+
+                        document.getElementsByClassName('pincode')[0].style.visibility = 'hidden';
+                        document.getElementsByClassName('pincode')[0].style.display = 'none';
+
+                        document.getElementsByClassName('cities')[0].style.visibility = 'hidden';
+                        document.getElementsByClassName('cities')[0].style.display = 'none';
+
+                        document.getElementsByClassName('areas')[0].style.visibility = 'hidden';
+                        document.getElementsByClassName('areas')[0].style.display = 'none';
+
+                        document.getElementsByClassName('location-upload')[0].style.visibility = 'hidden';
+                        document.getElementsByClassName('location-upload')[0].style.display = 'none';
+
+                        document.getElementsByClassName('pickup-loacation')[0].style.visibility = 'visible';
+                        document.getElementsByClassName('pickup-loacation')[0].style.display = 'block';
+
+
+                        // var element = document.getElementById("charge");
+                        // element.style.display = "none";
+
+                    });
+                </script>
+
+
+            <?php
+            }
+            if ($fn->get_settings('local_shipping', true)) {
+            ?>
+
+                <script>
+                    $(document).ready(function() {
+
+                        document.getElementsByClassName('pincode')[0].style.visibility = 'visible';
+                        document.getElementsByClassName('pincode')[0].style.display = 'block';
+
+                        document.getElementsByClassName('cities')[0].style.visibility = 'visible';
+                        document.getElementsByClassName('cities')[0].style.display = 'block';
+
+                        document.getElementsByClassName('areas')[0].style.visibility = 'visible';
+                        document.getElementsByClassName('areas')[0].style.display = 'block';
+
+                        document.getElementsByClassName('location-upload')[0].style.visibility = 'visible';
+                        document.getElementsByClassName('location-upload')[0].style.display = 'block';
+
+                        document.getElementsByClassName('pickup-loacation')[0].style.visibility = 'hidden';
+                        document.getElementsByClassName('pickup-loacation')[0].style.display = 'none';
+
+                        // var element = document.getElementById("charge");
+                        // element.style.display = "block";
+
+                    });
+                </script>
+
+
+            <?php
+
+            }
+
+            ?>
+
+
+
+
         </aside>
 </body>
 

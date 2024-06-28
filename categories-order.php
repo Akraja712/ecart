@@ -36,7 +36,7 @@ $db = new Database();
 $db->connect();
 
 if (isset($_POST['update_categories_order']) && $_POST['update_categories_order'] == 1) {
-    if (ALLOW_MODIFICATION == 0 && !defined(ALLOW_MODIFICATION)) {
+    if (defined('ALLOW_MODIFICATION') && ALLOW_MODIFICATION == 0) {
         echo '<label class="alert alert-danger">This operation is not allowed in demo panel!.</label>';
         return false;
     }
@@ -138,42 +138,42 @@ if ((!isset($_GET['category_id']) && ($_GET['category_id'] == '')) && !(isset($_
 <div class="content-wrapper">
     <div class="container">
         <!-- <?php if ($permissions['category_order']['read'] == 0) { ?> -->
-            <h2>Categories Order</h2>
-            <hr>
-            <div class='row'>
-                <div class="col-md-6 col-sm-12 col-xs-12 refresh">
-                    <!-- <?php if ($permissions['category_order']['update'] == 1) { ?>
+        <h2>Categories Order</h2>
+        <hr>
+        <div class='row'>
+            <div class="col-md-6 col-sm-12 col-xs-12 refresh">
+                <!-- <?php if ($permissions['category_order']['update'] == 1) { ?>
                         <div class="alert alert-danger topmargin-sm">You have no permission to update categories order.</div>
                     <?php } ?> -->
 
-                    <form id="category_form" method="POST" action="categories-order.php" data-parsley-validate class="form-horizontal form-label-left">
-                        <input type="hidden" id="update_categories_order" name="update_categories_order" required value='1' />
-                        <div class="form-group" style="overflow-y:scroll;height:400px;">
-                            <input type="hidden" name="row_order" id="row_order" required readonly />
-                            <ol id="sortable-row">
-                                <?php foreach ($res as $category) { ?>
-                                    <li id=<?php echo $category["id"]; ?>>
-                                        <?php if (!empty($category["image"])) {
-                                            echo "<big>" . $category["row_order"] . ".</big> &nbsp;<img src='$category[image]' height=30 > " . $category["name"];
-                                        } else {
-                                            echo "<big>" . $category["row_order"] . ".</big> &nbsp;<img src='images/logo.png' height=30 > " . $category["name"];
-                                        } ?>
-                                    </li>
-                                <?php } ?>
-                            </ol>
+                <form id="category_form" method="POST" action="categories-order.php" data-parsley-validate class="form-horizontal form-label-left">
+                    <input type="hidden" id="update_categories_order" name="update_categories_order" required value='1' />
+                    <div class="form-group" style="overflow-y:scroll;height:400px;">
+                        <input type="hidden" name="row_order" id="row_order" required readonly />
+                        <ol id="sortable-row">
+                            <?php foreach ($res as $category) { ?>
+                                <li id=<?php echo $category["id"]; ?>>
+                                    <?php if (!empty($category["image"])) {
+                                        echo "<big>" . $category["row_order"] . ".</big> &nbsp;<img src='$category[image]' height=30 > " . $category["name"];
+                                    } else {
+                                        echo "<big>" . $category["row_order"] . ".</big> &nbsp;<img src='images/logo.png' height=30 > " . $category["name"];
+                                    } ?>
+                                </li>
+                            <?php } ?>
+                        </ol>
+                    </div>
+                    <div class="ln_solid"></div>
+                    <div class="form-group">
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <button type="submit" id="submit_btn" class="btn btn-success">Save Order</button>
                         </div>
-                        <div class="ln_solid"></div>
-                        <div class="form-group">
-                            <div class="col-md-6 col-sm-6 col-xs-12">
-                                <button type="submit" id="submit_btn" class="btn btn-success">Save Order</button>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div id="result"></div>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="row">
+                        <div id="result"></div>
+                    </div>
+                </form>
             </div>
+        </div>
         <!-- <?php } else { ?>
             <div class="alert alert-danger">You have no permission to view categories order.</div>
         <?php } ?> -->

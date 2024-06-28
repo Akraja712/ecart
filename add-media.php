@@ -7,7 +7,7 @@ require_once 'includes/crud.php';
 $db = new Database();
 $db->connect();
 
-if (ALLOW_MODIFICATION == 0 && !defined(ALLOW_MODIFICATION)) {
+if (defined('ALLOW_MODIFICATION') && ALLOW_MODIFICATION == 0) {
     echo '<label class="alert alert-danger">This operation is not allowed in demo panel!.</label>';
     return false;
 }
@@ -23,8 +23,12 @@ for ($i = 0; $i < $count; $i++) {
         $allowedExts = array("gif", "jpeg", "jpg", "png");
 
         $target_path = DOMAIN_URL . 'upload/media/';
+        if (!is_dir($target_path)) {
+            mkdir($target_path, 0777, true);
+        }
+
         $result = $fn->validate_other_images($_FILES["documents"]["tmp_name"][$i], $_FILES["documents"]["type"][$i]);
-        if ($result) {
+        if (!$result) {
             $response['error'] = true;
             $response['message'] = "Image type must jpg, jpeg, gif, or png!";
             echo json_encode($response);
@@ -34,9 +38,7 @@ for ($i = 0; $i < $count; $i++) {
         $arr = explode(".", $image_name);
         $extension = strtolower(array_pop($arr));
         error_reporting(E_ERROR | E_PARSE);
-        if (!is_dir($target_path)) {
-            mkdir($target_path, 0777, true);
-        }
+
         $image = time() . rand('1000', '9999') . "." . $extension;
         if (move_uploaded_file($_FILES['documents']['tmp_name'][$i], 'upload/media/' . $image)) {
             $sub_directory = 'upload/media/';

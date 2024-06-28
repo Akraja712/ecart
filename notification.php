@@ -314,6 +314,11 @@ $_SESSION['timeout'] = $currentTime + $expired;
         });
     </script>
     <script>
+        $('#submit_btn').click(function() {
+            // location.reload();
+        });
+    </script>
+    <script>
         $(document).on('click', '.delete-notification', function() {
             if (confirm('Are you sure?')) {
                 id = $(this).data("id");

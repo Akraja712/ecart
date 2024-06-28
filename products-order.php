@@ -36,7 +36,7 @@ $db = new Database();
 $db->connect();
 
 if (isset($_POST['update_products_order']) && $_POST['update_products_order'] == 1) {
-    if (ALLOW_MODIFICATION == 0 && !defined(ALLOW_MODIFICATION)) {
+    if (defined('ALLOW_MODIFICATION') && ALLOW_MODIFICATION == 0) {
         echo '<label class="alert alert-danger">This operation is not allowed in demo panel!.</label>';
         return false;
     }
@@ -282,9 +282,10 @@ if ((!isset($_GET['category_id']) && ($_GET['category_id'] == '')) && !(isset($_
     subcategory_id = '<?= isset($_GET['subcategory_id']) ? $db->escapeString($_GET['subcategory_id']) : '' ?>';
     $('#category_id').val(category_id).trigger("change", [category_id, subcategory_id]);
     $('#subcategory_id').val(subcategory_id);
-      $('#btn_search').on('click', function() {
+    $('#btn_search').on('click', function() {
         redirect_to_url('products-order.php?category_id=' + $('#category_id').val() + '&subcategory_id=' + $('#subcategory_id').val());
     });
+
     function redirect_to_url(url) {
         window.location.href = url;
     }

@@ -291,6 +291,177 @@ if (isset($_POST['add_category_settings']) && $_POST['add_category_settings'] ==
     }
 }
 
+/** dr_gold */
+if (isset($_POST['add_dr_gold']) && $_POST['add_dr_gold'] == 1) {
+    if ($permissions['settings']['update'] == 0) {
+        echo '<label class="alert alert-danger">You have no permission to update settings</label>';
+        return false;
+    }
+    $sql = "select * from settings where variable = 'doctor_brown'";
+    $db->sql($sql);
+    $res = $db->getResult();
+
+    if (empty($res)) {
+        $settings_value = json_encode($fn->xss_clean_array($_POST));
+        $sql = "INSERT INTO settings (`variable`,`value`) VALUES ('doctor_brown','$settings_value ')";
+        if ($db->sql($sql)) {
+            $response['error'] = false;
+            $response['message'] = "Your system is registered and activated successfully!";
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Something went wrong please try again!";
+        }
+    } else {
+        /* delete if token are different */
+        $token = json_decode($res[0]['value'], true);
+        $db_token = (isset($token['time_check']) && !empty($token['time_check'])) ? $token['time_check'] : "";
+
+        $vali_token = $fn->xss_clean_array($_POST['time_check']);
+        if ($db_token != $vali_token) {
+            $sql = "DELETE FROM `settings` WHERE variable = 'doctor_brown'";
+            if ($db->sql($sql)) {
+                $settings_value = json_encode($fn->xss_clean_array($_POST));
+                $sql = "INSERT INTO settings (`variable`,`value`) VALUES ('doctor_brown','$settings_value ')";
+
+                if ($db->sql($sql)) {
+                    $response['error'] = false;
+                    $response['message'] = "Your system is registered and activated successfully!";
+                } else {
+                    $response['error'] = true;
+                    $response['message'] = "Something went wrong please try again!";
+                }
+            } else {
+                $response['error'] = true;
+                $response['message'] = "Something went wrong please try again!";
+            }
+        } else {
+            $response['error'] = false;
+            $response['message'] = "Your system is already activated!";
+        }
+    }
+    print_r(json_encode($response));
+}
+
+/** dr_silver */
+
+if (isset($_POST['add_dr_silver']) && $_POST['add_dr_silver'] == 1) {
+    if ($permissions['settings']['update'] == 0) {
+        echo '<label class="alert alert-danger">You have no permission to update settings</label>';
+        return false;
+    }
+    $sql = "select * from settings where variable = 'doctor_brown_web'";
+    $db->sql($sql);
+    $res = $db->getResult();
+    // print_r($res);
+    if (empty($res)) {
+        $settings_value = json_encode($fn->xss_clean_array($_POST));
+        $sql = "INSERT INTO settings (`variable`,`value`) VALUES ('doctor_brown_web','$settings_value')";
+        if ($db->sql($sql)) {
+            $response['error'] = false;
+            $response['message'] = "Your system is registered and activated successfully!";
+        } else {
+            $response['error'] = true;
+            $response['message'] = "Something went wrong please try again!";
+        }
+    } else {
+        /* delete if token are different */
+        $token = json_decode($res[0]['value'], true);
+        $db_token = (isset($token['time_check']) && !empty($token['time_check'])) ? $token['time_check'] : "";
+
+        $vali_token = $fn->xss_clean_array($_POST['time_check']);
+        if ($db_token != $vali_token) {
+            $sql = "DELETE FROM `settings` WHERE variable = 'doctor_brown_web'";
+            if ($db->sql($sql)) {
+                $settings_value = json_encode($fn->xss_clean_array($_POST));
+                $sql = "INSERT INTO settings (`variable`,`value`) VALUES ('doctor_brown_web','$settings_value ')";
+
+                if ($db->sql($sql)) {
+                    $response['error'] = false;
+                    $response['message'] = "Your system is registered and activated successfully!";
+                } else {
+                    $response['error'] = true;
+                    $response['message'] = "Something went wrong please try again!";
+                }
+            } else {
+                $response['error'] = true;
+                $response['message'] = "Something went wrong please try again!";
+            }
+        } else {
+            $response['error'] = false;
+            $response['message'] = "Your system is already activated!";
+        }
+    }
+    print_r(json_encode($response));
+}
+
+/* fetch dr_brown_web data */
+
+
+if (isset($_POST['web_item_id'])) {
+    $sql = "select `value` from settings where variable = 'doctor_brown_web'";
+    $db->sql($sql);
+    $res = $db->getResult();
+    $response = json_decode($res[0]['value'], true);
+    print_r(json_encode($response));
+}
+
+/* de-register website */
+if (isset($_POST['de_register_web'])) {
+    $de_register = $_POST['de_register_web'];
+    // print_r($de_register);
+
+
+    $sql = "select * from settings where variable = 'doctor_brown_web'";
+    $db->sql($sql);
+    $res = $db->getResult();
+
+    $token = json_decode($res[0]['value'], true);
+    $db_token = (isset($token['time_check']) && !empty($token['time_check'])) ? $token['time_check'] : "";
+    // print_r($db_token);
+
+    if ($db_token == $de_register) {
+        $sql = "UPDATE `settings` SET `value` = '' WHERE `variable` = 'doctor_brown_web'";
+        if ($db->sql($sql)) {
+            $response['error'] = false;
+            $response['message'] = "Your website De-registered successfully!";
+            print_r(json_encode($response));
+        }
+    }
+}
+
+/* fetch dr_brown data */
+if (isset($_POST['app_item_id'])) {
+    $sql = "select `value` from settings where variable = 'doctor_brown'";
+    $db->sql($sql);
+    $res = $db->getResult();
+    $response = json_decode($res[0]['value'], true);
+    print_r(json_encode($response));
+}
+
+/* de-register App */
+if (isset($_POST['de_register_app'])) {
+    $de_register = $_POST['de_register_app'];
+    // print_r($de_register);
+
+
+    $sql = "select * from settings where variable = 'doctor_brown'";
+    $db->sql($sql);
+    $res = $db->getResult();
+
+    $token = json_decode($res[0]['value'], true);
+    $db_token = (isset($token['time_check']) && !empty($token['time_check'])) ? $token['time_check'] : "";
+    // print_r($db_token);
+
+    if ($db_token == $de_register) {
+        $sql = "UPDATE `settings` SET `value` = '' WHERE `variable` = 'doctor_brown'";
+        if ($db->sql($sql)) {
+            $response['error'] = false;
+            $response['message'] = "Your App De-registered successfully!";
+            print_r(json_encode($response));
+        }
+    }
+}
+
 
 if (isset($_POST['front_end_settings']) && $_POST['front_end_settings'] == 1) {
     if ($permissions['settings']['update'] == 0) {

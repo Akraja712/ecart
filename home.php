@@ -2,11 +2,15 @@
 
 include_once('includes/custom-functions.php');
 include_once('includes/functions.php');
+include_once('library/shiprocket.php');
+
 $function = new custom_functions;
 
 // set time for session timeout
 $currentTime = time() + 25200;
 $expired = 3600;
+$shiprocket = new Shiprocket;
+// print_r($shiprocket);
 // if session not set go to login page
 if (!isset($_SESSION['user'])) {
     header("location:index.php");
@@ -22,16 +26,20 @@ $_SESSION['timeout'] = $currentTime + $expired;
 $function = new custom_functions;
 $permissions = $function->get_permissions($_SESSION['id']);
 
-
+$shipping_type = ($function->get_settings('local_shipping') == 0) ? 'standard' : 'local';
 include "header.php";
 $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-stock-limit'])) ? $config['low-stock-limit'] : 0;
+
+
+
 ?>
 <html>
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>GPN Collection- Dashboard</title>
+    <title><?= $settings['app_name'] ?> - Dashboard</title>
 </head>
+
 
 <body>
 
@@ -48,8 +56,8 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
 
         </section>
         <section class="content">
-            <div class="row">
-                <div class="col-lg-3 col-xs-6">
+            <div class="row ">
+                <div class="col-lg-3 col-xs-6 standard_shipping">
                     <div class="small-box bg-aqua">
                         <div class="inner">
                             <h3><?= $function->rows_count('orders', "id"); ?></h3>
@@ -59,7 +67,7 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                         <a href="orders.php" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
-                <div class="col-lg-3 col-xs-6">
+                <div class="col-lg-3 col-xs-6 standard_shipping">
                     <div class="small-box bg-yellow">
                         <div class="inner">
                             <h3><?= $function->rows_count('products', "id"); ?></h3>
@@ -69,7 +77,7 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                         <a href="products.php" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
-                <div class="col-lg-3 col-xs-6">
+                <div class="col-lg-3 col-xs-6 standard_shipping">
                     <div class="small-box bg-red">
                         <div class="inner">
                             <h3><?= $function->rows_count('users', "id"); ?></h3>
@@ -79,7 +87,7 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                         <a href="customers.php" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
-                <div class="col-lg-3 col-xs-6">
+                <div class="col-lg-3 col-xs-6 standard_shipping">
                     <div class="small-box bg-green">
                         <div class="inner">
                             <h3><?= $function->rows_count('seller', "id"); ?></h3>
@@ -89,6 +97,25 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                         <a href="sellers.php" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
+
+                <div class="col-lg-4 col-xs-6 standard_shipping shiprocket d-none">
+                    <div class="small-box bg-purple">
+                        <div class="inner">
+                            <h3>
+
+
+
+                                <?= $shiprocket->get_wallet_balance()['data']['balance_amount'] ?>
+
+
+                            </h3>
+                            <p>Shiprocket Wallet Balance</p>
+                        </div>
+                        <div class="icon"><i class="fa fa-money"></i></div>
+                        <a href="https://app.shiprocket.in/dashboard" class="small-box-footer" target="_blank"> More info <i class="fa fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+
             </div>
             <div class="row">
                 <div class="col-lg-6 col-xs-6">
@@ -111,7 +138,7 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                     <div class="box box-success">
                         <?php $year = date("Y");
                         $curdate = date('Y-m-d');
-                        $sql = "SELECT SUM(final_total) AS total_sale,DATE(date_added) AS order_date FROM orders WHERE YEAR(date_added) = '$year' AND DATE(date_added)<'$curdate' GROUP BY DATE(date_added) ORDER BY DATE(date_added) DESC  LIMIT 0,7";
+                        $sql = "SELECT SUM(final_total) AS total_sale,DATE(date_added) AS order_date FROM orders WHERE YEAR(date_added) = '$year' AND DATE(date_added)<='$curdate' GROUP BY DATE(date_added) ORDER BY DATE(date_added) DESC  LIMIT 0,7";
                         $db->sql($sql);
                         $result_order = $db->getResult(); ?>
                         <div class="tile-stats" style="padding:10px;">
@@ -136,7 +163,7 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                 <div class="col-md-6">
                     <div class="box box-warning">
                         <div class="box-header with-border">
-                            <h3 class="box-title">Top Sellers <small>( Month: <?=date("M"); ?>)</small></h3>
+                            <h3 class="box-title">Top Sellers <small>( Month: <?= date("M"); ?>)</small></h3>
                             <div class="box-tools pull-right">
                                 <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
                                 <button class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
@@ -145,10 +172,7 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                         <div class="box-body">
 
                             <div class="table-responsive">
-                                <table class="table no-margin" id='top_seller_table' data-toggle="table" data-url="api-firebase/get-bootstrap-table-data.php?table=top_sellers"
-                                 data-page-list="[5,10]"  data-page-size="5" data-show-refresh="true" data-show-columns="true" data-side-pagination="server" data-pagination="true"
-                                   data-sort-name="total_revenue" data-sort-order="desc" data-toolbar="#toolbar"   data-query-params="queryParams_top_seller"
-                                 >
+                                <table class="table no-margin" id='top_seller_table' data-toggle="table" data-url="api-firebase/get-bootstrap-table-data.php?table=top_sellers" data-page-list="[5,10]" data-page-size="5" data-show-refresh="true" data-show-columns="true" data-side-pagination="server" data-pagination="true" data-sort-name="total_revenue" data-sort-order="desc" data-toolbar="#toolbar" data-query-params="queryParams_top_seller">
                                     <thead>
                                         <tr>
                                             <th data-field="id" data-sortable='true'>Rank</th>
@@ -161,7 +185,7 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                                 </table>
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -176,10 +200,7 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                         <div class="box-body">
 
                             <div class="table-responsive">
-                                <table class="table no-margin" id='top_seller_table' data-toggle="table" data-url="api-firebase/get-bootstrap-table-data.php?table=top_categories"
-                                 data-page-list="[5,10]" data-page-size="5" data-show-refresh="true" data-show-columns="true" data-side-pagination="server" data-pagination="true"
-                                   data-sort-name="total_revenues" data-sort-order="desc" data-toolbar="#toolbar"   data-query-params="queryParams_top_cat"
-                                 >
+                                <table class="table no-margin" id='top_seller_table' data-toggle="table" data-url="api-firebase/get-bootstrap-table-data.php?table=top_categories" data-page-list="[5,10]" data-page-size="5" data-show-refresh="true" data-show-columns="true" data-side-pagination="server" data-pagination="true" data-sort-name="total_revenues" data-sort-order="desc" data-toolbar="#toolbar" data-query-params="queryParams_top_cat">
                                     <thead>
                                         <tr>
                                             <th data-field="id" data-sortable='true'>Rank</th>
@@ -192,7 +213,7 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                                 </table>
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
             </div>
@@ -204,11 +225,38 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                     <div class="col-md-12">
                         <div class="box box-info">
                             <div class="box-header with-border">
-                                <h3 class="box-title">Latest Orders</h3>
+                                <h3 class="box-title">Latest Orders</h3>data
                                 <div class="box-tools pull-right">
                                     <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
                                     <button class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
                                 </div>
+                                <form method="POST" id="filter_form" name="filter_form">
+
+                                    <div class="form-group pull-left">
+                                        <select id="filter_order" name="filter_order" placeholder="Select Status" required class="form-control" style="width: 300px;">
+                                            <option value="">All Orders</option>
+                                            <option value='awaiting_payment'>Awaiting Payment</option>
+                                            <option value='received'>Received</option>
+                                            <option value='processed'>Processed</option>
+                                            <option value='shipped'>Shipped</option>
+                                            <option value='delivered'>Delivered</option>
+                                            <option value='cancelled'>Cancelled</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group pull-left ml-5">
+                                        <?php
+                                        $sql = "SELECT id,name FROM seller ORDER BY id + 0 ASC";
+                                        $db->sql($sql);
+                                        $sellers = $db->getResult();
+                                        ?>
+                                        <select id='seller_id' name="seller_id" class='form-control'>
+                                            <option value=''>Select Seller</option>
+                                            <?php foreach ($sellers as $row) { ?>
+                                                <option value='<?= $row['id'] ?>'><?= $row['name'] ?></option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                </form>
                             </div>
                             <div class="box-body">
 
@@ -234,6 +282,8 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                                                 <th data-field="payment_method" data-sortable='true' data-visible="true">P.Method</th>
                                                 <th data-field="address" data-sortable='true' data-visible="false">Address</th>
                                                 <th data-field="delivery_time" data-sortable='true' data-visible='true'>D.Time</th>
+                                                <!-- <th data-field="status" data-sortable='true' data-visible='false'>Status</th> -->
+                                                <!-- <th data-field="active_status" data-sortable='true' data-visible='true'>A.Status</th> -->
                                                 <th data-field="date_added" data-sortable='true' data-visible="false">O.Date</th>
                                                 <th data-field="operate">Action</th>
 
@@ -255,14 +305,18 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
         </section>
     </div>
     <script>
-        // $('#filter_order').on('change', function() {
-        //     $('#orders_table').bootstrapTable('refresh');
-        // });
+        $('#filter_order').on('change', function() {
+            $('#orders_table').bootstrapTable('refresh');
+        });
+        $('#seller_id').on('change', function() {
+            $('#orders_table').bootstrapTable('refresh');
+        });
     </script>
     <script>
         function queryParams(p) {
             return {
-                // "filter_order": $('#filter_order').val(),
+                "filter_order": $('#filter_order').val(),
+                "seller_id": $('#seller_id').val(),
                 limit: p.limit,
                 sort: p.sort,
                 order: p.order,
@@ -270,6 +324,7 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                 search: p.search
             };
         }
+
         function queryParams_top_seller(p) {
             return {
                 limit: p.limit,
@@ -278,6 +333,7 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
                 offset: p.offset
             };
         }
+
         function queryParams_top_cat(p) {
             return {
                 limit: p.limit,
@@ -340,6 +396,16 @@ $low_stock_limit = isset($config['low-stock-limit']) && (!empty($config['low-sto
             var chart = new google.charts.Bar(document.getElementById('earning_chart'));
             chart.draw(data, google.charts.Bar.convertOptions(options));
         }
+
+        $(document).ready(function() {
+            var shipping_type = "<?= $shipping_type ?>";
+            if (shipping_type == "standard") {
+                $('.standard_shipping').removeClass('col-lg-3')
+                $('.standard_shipping').addClass('col-lg-2')
+                $('.shiprocket').removeClass('d-none')
+                $('.shiprocket').removeClass('col-lg-2')
+            }
+        })
     </script>
 </body>
 

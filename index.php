@@ -1,25 +1,30 @@
 <?php session_start();
-    ob_start(); 
-    include_once('includes/crud.php');
-    $db = new Database;
-    include_once('includes/custom-functions.php');
-    $fn = new custom_functions();
-    $db->connect();
-    date_default_timezone_set('Asia/Kolkata');
-    $sql = "SELECT * FROM settings";
-    $db->sql($sql);
-    $res = $db->getResult();
-    $settings = json_decode($res[5]['value'],1);
-    $logo = $fn->get_settings('logo');
-    
-    ?>
+ob_start();
+if (isset($_SESSION['id'])) {
+    header('location:home.php');
+}
+
+include_once('includes/crud.php');
+$db = new Database;
+include_once('includes/custom-functions.php');
+$fn = new custom_functions();
+$db->connect();
+date_default_timezone_set('Asia/Kolkata');
+$sql = "SELECT * FROM settings";
+$db->sql($sql);
+$res = $db->getResult();
+$settings = json_decode($res[5]['value'], 1);
+$logo = $fn->get_settings('logo');
+
+?>
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<link rel="icon" type="image/ico" href="dist/img/new.jpeg">
-	<title>Admin Login - GPN Collection</title>
+    <link rel="icon" type="image/ico" href="<?= DOMAIN_URL . 'dist/img/' . $logo ?>">
+    <title>Admin Login - <?= $settings['app_name'] ?></title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <!-- Bootstrap 3.3.5 -->
@@ -52,9 +57,16 @@
         <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
-  </head>
+</head>
 </body>
-      <!-- Content Wrapper. Contains page content -->
-       <?php include 'public/login-form.php'; ?>
-  </body>
+<!-- Content Wrapper. Contains page content -->
+<?php if (empty(DOMAIN_URL)) { ?>
+    <h1 style="color:red;">You have to install eCart multivendor on your device!</h1>
+<?php
+} else {
+    include 'public/login-form.php';
+}
+?>
+</body>
+
 </html>

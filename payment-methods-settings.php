@@ -54,75 +54,90 @@ include "header.php"; ?>
                         <!-- /.box-header -->
                         <!-- form start -->
                         <div class="box-body">
-                            <div class="col-md-4">
+                            <div class="col-md-4 ">
                                 <form method="post" id="payment_method_settings_form">
                                     <input type="hidden" id="payment_method_settings" name="payment_method_settings" required="" value="1" aria-required="true">
                                     <h5>COD Payments </h5>
                                     <hr>
-                                    <div class="form-group">
-                                        <label for="cod_payment_method">COD Payments <small>[ Enable / Disable ] </small></label><br>
-                                        <input type="checkbox" id="cod_payment_method_btn" class="js-switch" <?php if (isset($data['cod_payment_method']) && !empty($data['cod_payment_method']) && $data['cod_payment_method'] == '1') {
-                                                                                                                    echo 'checked';
-                                                                                                                } ?>>
-                                        <input type="hidden" id="cod_payment_method" name="cod_payment_method" value="<?= (isset($data['cod_payment_method']) && !empty($data['cod_payment_method'])) ? $data['cod_payment_method'] : 0; ?>">
+                                    <div class="">
+                                        <div class="form-group">
+                                            <label for="cod_payment_method">COD Payments <small>[ Enable / Disable ] </small></label><br>
+                                            <input type="checkbox" id="cod_payment_method_btn" class="js-switch" <?php if (isset($data['cod_payment_method']) && !empty($data['cod_payment_method']) && $data['cod_payment_method'] == '1') {
+                                                                                                                        echo 'checked';
+                                                                                                                    } ?>>
+
+                                            <input type="hidden" class="" id="cod_payment_method" name="cod_payment_method" value="<?= (isset($data['cod_payment_method']) && !empty($data['cod_payment_method'])) ? $data['cod_payment_method'] : 0; ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="">COD Mode</label><br>
+                                            <p><small><b>Global :</b> Will be considered for all the products.</small></p>
+                                            <p><small><b>Product wise :</b> Product wise COD wil be considered.</small></p>
+                                            <select name="cod_mode" class="form-control">
+                                                <option value="global" <?= (isset($data['cod_mode']) && $data['cod_mode'] == 'global') ? "selected" : "" ?>>Global</option>
+                                                <option value="product" <?= (isset($data['cod_mode']) && $data['cod_mode'] == 'product') ? "selected" : "" ?>>Product wise</option>
+                                            </select>
+                                        </div>
                                     </div>
                                     <hr>
                                     <h5>Paypal Payments </h5>
                                     <hr>
-                                    <div class="form-group">
-                                        <label for="paypal_payment_method">Paypal Payments <small>[ Enable / Disable ] </small></label><br>
-                                        <input type="checkbox" id="paypal_payment_method_btn" class="js-switch" <?= (!empty($data['paypal_payment_method']) && $data['paypal_payment_method'] == 1) ? 'checked' : ''; ?>>
-                                        <input type="hidden" id="paypal_payment_method" name="paypal_payment_method" value="<?= (isset($data['paypal_payment_method']) && !empty($data['paypal_payment_method'])) ? $data['paypal_payment_method'] : 0; ?>">
+                                    <div class="validation">
+                                        <div class="form-group">
+                                            <label for="paypal_payment_method">Paypal Payments <small>[ Enable / Disable ] </small></label><br>
+                                            <input type="checkbox" id="paypal_payment_method_btn" class="js-switch" <?= (!empty($data['paypal_payment_method']) && $data['paypal_payment_method'] == 1) ? 'checked' : ''; ?>>
+                                            <input type="hidden" id="paypal_payment_method" class="paypal_check_box" name="paypal_payment_method" value="<?= (isset($data['paypal_payment_method']) && !empty($data['paypal_payment_method'])) ? $data['paypal_payment_method'] : 0; ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="">Payment Mode <small>[ sandbox / live ]</small></label>
+                                            <select name="paypal_mode" class="form-control paypal_mode_select">
+                                                <option value="">Select Mode </option>
+                                                <option value="sandbox" <?= (isset($data['paypal_mode']) && $data['paypal_mode'] == 'sandbox') ? "selected" : "" ?>>Sandbox ( Testing )</option>
+                                                <option value="production" <?= (isset($data['paypal_mode']) && $data['paypal_mode'] == 'production') ? "selected" : "" ?>>Production ( Live )</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="">Currency Code <small>[ PayPal supported ]</small> <a href="https://developer.paypal.com/docs/api/reference/currency-codes/" target="_BLANK"><i class="fa fa-link"></i></a></label>
+                                            <select name="paypal_currency_code" class="form-control paypal_currency_select">
+                                                <option value="">Select Currency Code </option>
+                                                <option value="INR" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'INR') ? "selected" : "" ?>>Indian rupee </option>
+                                                <option value="AUD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'AUD') ? "selected" : "" ?>>Australian dollar </option>
+                                                <option value="BRL" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'BRL') ? "selected" : "" ?>>Brazilian real </option>
+                                                <option value="CAD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'CAD') ? "selected" : "" ?>>Canadian dollar </option>
+                                                <option value="CNY" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'CNY') ? "selected" : "" ?>>Chinese Renmenbi </option>
+                                                <option value="CZK" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'CZK') ? "selected" : "" ?>>Czech koruna </option>
+                                                <option value="DKK" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'DKK') ? "selected" : "" ?>>Danish krone </option>
+                                                <option value="EUR" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'EUR') ? "selected" : "" ?>>Euro </option>
+                                                <option value="HKD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'HKD') ? "selected" : "" ?>>Hong Kong dollar </option>
+                                                <option value="HUF" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'HUF') ? "selected" : "" ?>>Hungarian forint </option>
+                                                <option value="ILS" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'ILS') ? "selected" : "" ?>>Israeli new shekel </option>
+                                                <option value="JPY" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'JPY') ? "selected" : "" ?>>Japanese yen </option>
+                                                <option value="MYR" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'MYR') ? "selected" : "" ?>>Malaysian ringgit </option>
+                                                <option value="MXN" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'MXN') ? "selected" : "" ?>>Mexican peso </option>
+                                                <option value="TWD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'TWD') ? "selected" : "" ?>>New Taiwan dollar </option>
+                                                <option value="NZD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'NZD') ? "selected" : "" ?>>New Zealand dollar </option>
+                                                <option value="NOK" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'NOK') ? "selected" : "" ?>>Norwegian krone </option>
+                                                <option value="PHP" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'PHP') ? "selected" : "" ?>>Philippine peso </option>
+                                                <option value="PLN" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'PLN') ? "selected" : "" ?>>Polish złoty </option>
+                                                <option value="GBP" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'GBP') ? "selected" : "" ?>>Pound sterling </option>
+                                                <option value="RUB" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'RUB') ? "selected" : "" ?>>Russian ruble </option>
+                                                <option value="SGD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'SGD') ? "selected" : "" ?>>Singapore dollar </option>
+                                                <option value="SEK" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'SEK') ? "selected" : "" ?>>Swedish krona </option>
+                                                <option value="CHF" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'CHF') ? "selected" : "" ?>>Swiss franc </option>
+                                                <option value="THB" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'THB') ? "selected" : "" ?>>Thai baht </option>
+                                                <option value="USD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'USD') ? "selected" : "" ?>>United States dollar </option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="paypal_business_email">Paypal Business Email</label>
+                                            <input type="text" class="form-control paypal_email" name="paypal_business_email" value="<?= (isset($data['paypal_business_email'])) ? $data['paypal_business_email'] : '' ?>" placeholder="Paypal Business Email" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="paypal_notification_url">Notification URL <small>(Set this as IPN notification URL in you PayPal account)</small></label>
+                                            <input type="text" class="form-control paypal_notification_url" name="paypal_notification_url" value="<?= $protocol . "://" . $_SERVER['SERVER_NAME'] . "/paypal/ipn.php" ?>" placeholder="Paypal IPN notification URL" disabled />
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="">Payment Mode <small>[ sandbox / live ]</small></label>
-                                        <select name="paypal_mode" class="form-control">
-                                            <option value="">Select Mode </option>
-                                            <option value="sandbox" <?= (isset($data['paypal_mode']) && $data['paypal_mode'] == 'sandbox') ? "selected" : "" ?>>Sandbox ( Testing )</option>
-                                            <option value="production" <?= (isset($data['paypal_mode']) && $data['paypal_mode'] == 'production') ? "selected" : "" ?>>Production ( Live )</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="">Currency Code <small>[ PayPal supported ]</small> <a href="https://developer.paypal.com/docs/api/reference/currency-codes/" target="_BLANK"><i class="fa fa-link"></i></a></label>
-                                        <select name="paypal_currency_code" class="form-control">
-                                            <option value="">Select Currency Code </option>
-                                            <option value="INR" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'INR') ? "selected" : "" ?>>Indian rupee </option>
-                                            <option value="AUD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'AUD') ? "selected" : "" ?>>Australian dollar </option>
-                                            <option value="BRL" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'BRL') ? "selected" : "" ?>>Brazilian real </option>
-                                            <option value="CAD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'CAD') ? "selected" : "" ?>>Canadian dollar </option>
-                                            <option value="CNY" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'CNY') ? "selected" : "" ?>>Chinese Renmenbi </option>
-                                            <option value="CZK" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'CZK') ? "selected" : "" ?>>Czech koruna </option>
-                                            <option value="DKK" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'DKK') ? "selected" : "" ?>>Danish krone </option>
-                                            <option value="EUR" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'EUR') ? "selected" : "" ?>>Euro </option>
-                                            <option value="HKD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'HKD') ? "selected" : "" ?>>Hong Kong dollar </option>
-                                            <option value="HUF" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'HUF') ? "selected" : "" ?>>Hungarian forint </option>
-                                            <option value="ILS" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'ILS') ? "selected" : "" ?>>Israeli new shekel </option>
-                                            <option value="JPY" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'JPY') ? "selected" : "" ?>>Japanese yen </option>
-                                            <option value="MYR" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'MYR') ? "selected" : "" ?>>Malaysian ringgit </option>
-                                            <option value="MXN" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'MXN') ? "selected" : "" ?>>Mexican peso </option>
-                                            <option value="TWD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'TWD') ? "selected" : "" ?>>New Taiwan dollar </option>
-                                            <option value="NZD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'NZD') ? "selected" : "" ?>>New Zealand dollar </option>
-                                            <option value="NOK" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'NOK') ? "selected" : "" ?>>Norwegian krone </option>
-                                            <option value="PHP" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'PHP') ? "selected" : "" ?>>Philippine peso </option>
-                                            <option value="PLN" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'PLN') ? "selected" : "" ?>>Polish złoty </option>
-                                            <option value="GBP" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'GBP') ? "selected" : "" ?>>Pound sterling </option>
-                                            <option value="RUB" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'RUB') ? "selected" : "" ?>>Russian ruble </option>
-                                            <option value="SGD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'SGD') ? "selected" : "" ?>>Singapore dollar </option>
-                                            <option value="SEK" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'SEK') ? "selected" : "" ?>>Swedish krona </option>
-                                            <option value="CHF" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'CHF') ? "selected" : "" ?>>Swiss franc </option>
-                                            <option value="THB" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'THB') ? "selected" : "" ?>>Thai baht </option>
-                                            <option value="USD" <?= (isset($data['paypal_currency_code']) && $data['paypal_currency_code'] == 'USD') ? "selected" : "" ?>>United States dollar </option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="paypal_business_email">Paypal Business Email</label>
-                                        <input type="text" class="form-control" name="paypal_business_email" value="<?= (isset($data['paypal_business_email'])) ? $data['paypal_business_email'] : '' ?>" placeholder="Paypal Business Email" />
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="paypal_notification_url">Notification URL <small>(Set this as IPN notification URL in you PayPal account)</small></label>
-                                        <input type="text" class="form-control" name="paypal_notification_url" value="<?= $protocol . "://" . $_SERVER['SERVER_NAME'] . "/paypal/ipn.php" ?>" placeholder="Paypal IPN notification URL" disabled />
-                                    </div>
-                                    <hr>
+
+                                    <!-- <hr>
                                     <h5>PayUMoney Payments </h5>
                                     <hr>
                                     <div class="form-group">
@@ -140,16 +155,16 @@ include "header.php"; ?>
                                     </div>
                                     <div class="form-group">
                                         <label for="payumoney_merchant_key">Merchant key</label>
-                                        <input type="text" class="form-control" name="payumoney_merchant_key" value="<?= (isset($data['payumoney_merchant_key'])) ? $data['payumoney_merchant_key'] : '' ?>" placeholder="PayUMoney Merchant Key" />
+                                        <input type="text" class="form-control merchant_key_payu" name="payumoney_merchant_key" value="<?= (isset($data['payumoney_merchant_key'])) ? $data['payumoney_merchant_key'] : '' ?>" placeholder="PayUMoney Merchant Key" />
                                     </div>
                                     <div class="form-group">
                                         <label for="payumoney_merchant_id">Merchant ID</label>
-                                        <input type="text" class="form-control" name="payumoney_merchant_id" value="<?= (isset($data['payumoney_merchant_id'])) ? $data['payumoney_merchant_id'] : '' ?>" placeholder="PayUMoney Merchant ID" />
+                                        <input type="text" class="form-control merchant_key_id" name="payumoney_merchant_id" value="<?= (isset($data['payumoney_merchant_id'])) ? $data['payumoney_merchant_id'] : '' ?>" placeholder="PayUMoney Merchant ID" />
                                     </div>
                                     <div class="form-group">
                                         <label for="payumoney_salt">Salt</label>
-                                        <input type="text" class="form-control" name="payumoney_salt" value="<?= (isset($data['payumoney_salt'])) ? $data['payumoney_salt'] : '' ?>" placeholder="PayUMoney Merchant ID" />
-                                    </div>
+                                        <input type="text" class="form-control merchant_key_salt" name="payumoney_salt" value="<?= (isset($data['payumoney_salt'])) ? $data['payumoney_salt'] : '' ?>" placeholder="PayUMoney Merchant ID" />
+                                    </div> -->
                                     <hr>
                                     <h5>Razorpay Payments </h5>
                                     <hr>
@@ -160,11 +175,11 @@ include "header.php"; ?>
                                     </div>
                                     <div class="form-group">
                                         <label for="razorpay_key">Razorpay key ID</label>
-                                        <input type="text" class="form-control" name="razorpay_key" value="<?= (isset($data['razorpay_key'])) ? $data['razorpay_key'] : '' ?>" placeholder="Razor Key ID" />
+                                        <input type="text" class="form-control raz_key" name="razorpay_key" value="<?= (isset($data['razorpay_key'])) ? $data['razorpay_key'] : '' ?>" placeholder="Razor Key ID" />
                                     </div>
                                     <div class="form-group">
                                         <label for="razorpay_secret_key">Secret Key</label>
-                                        <input type="text" class="form-control" name="razorpay_secret_key" value="<?= (isset($data['razorpay_secret_key'])) ? $data['razorpay_secret_key'] : '' ?>" placeholder="Razorpay Secret Key " />
+                                        <input type="text" class="form-control raz_secret" name="razorpay_secret_key" value="<?= (isset($data['razorpay_secret_key'])) ? $data['razorpay_secret_key'] : '' ?>" placeholder="Razorpay Secret Key " />
                                     </div>
                                     <hr>
                                     <h5>Paystack Payments </h5>
@@ -176,11 +191,11 @@ include "header.php"; ?>
                                     </div>
                                     <div class="form-group">
                                         <label for="paystack_public_key">Paystack Public key</label>
-                                        <input type="text" class="form-control" name="paystack_public_key" value="<?= (isset($data['paystack_public_key'])) ? $data['paystack_public_key'] : '' ?>" placeholder="Paystack Public key" />
+                                        <input type="text" class="form-control paystack_public_key" name="paystack_public_key" value="<?= (isset($data['paystack_public_key'])) ? $data['paystack_public_key'] : '' ?>" placeholder="Paystack Public key" />
                                     </div>
                                     <div class="form-group">
                                         <label for="paystack_secret_key">Paystack Secret Key</label>
-                                        <input type="text" class="form-control" name="paystack_secret_key" value="<?= (isset($data['paystack_secret_key'])) ? $data['paystack_secret_key'] : '' ?>" placeholder="Paystack Secret Key " />
+                                        <input type="text" class="form-control paystack_secret_key" name="paystack_secret_key" value="<?= (isset($data['paystack_secret_key'])) ? $data['paystack_secret_key'] : '' ?>" placeholder="Paystack Secret Key " />
                                     </div>
                                     <hr>
                                     <h5>Flutterwave Payments </h5>
@@ -192,15 +207,15 @@ include "header.php"; ?>
                                     </div>
                                     <div class="form-group">
                                         <label for="flutterwave_public_key">Flutterwave Public key</label>
-                                        <input type="text" class="form-control" name="flutterwave_public_key" value="<?= (isset($data['flutterwave_public_key'])) ? $data['flutterwave_public_key'] : '' ?>" placeholder="Flutterwave Public key" />
+                                        <input type="text" class="form-control flutterwave_public_key" name="flutterwave_public_key" value="<?= (isset($data['flutterwave_public_key'])) ? $data['flutterwave_public_key'] : '' ?>" placeholder="Flutterwave Public key" />
                                     </div>
                                     <div class="form-group">
                                         <label for="flutterwave_secret_key">Flutterwave Secret Key</label>
-                                        <input type="text" class="form-control" name="flutterwave_secret_key" value="<?= (isset($data['flutterwave_secret_key'])) ? $data['flutterwave_secret_key'] : '' ?>" placeholder="Flutterwave Secret Key " />
+                                        <input type="text" class="form-control flutterwave_secret_key" name="flutterwave_secret_key" value="<?= (isset($data['flutterwave_secret_key'])) ? $data['flutterwave_secret_key'] : '' ?>" placeholder="Flutterwave Secret Key " />
                                     </div>
                                     <div class="form-group">
                                         <label for="flutterwave_encryption_key">Flutterwave Encryption key</label>
-                                        <input type="text" class="form-control" name="flutterwave_encryption_key" value="<?= (isset($data['flutterwave_encryption_key'])) ? $data['flutterwave_encryption_key'] : '' ?>" placeholder="Flutterwave Encryption key" />
+                                        <input type="text" class="form-control flutterwave_encryption_key" name="flutterwave_encryption_key" value="<?= (isset($data['flutterwave_encryption_key'])) ? $data['flutterwave_encryption_key'] : '' ?>" placeholder="Flutterwave Encryption key" />
                                     </div>
                                     <div class="form-group">
                                         <label for="">Currency Code <small>[ Flutterwave supported ]</small> </label>
@@ -242,23 +257,23 @@ include "header.php"; ?>
                                     </div>
                                     <div class="form-group">
                                         <label for="midtrans_merchant_id">Midtrans Merchant ID</label>
-                                        <input type="text" class="form-control" name="midtrans_merchant_id" value="<?= (isset($data['midtrans_merchant_id'])) ? $data['midtrans_merchant_id'] : '' ?>" placeholder="Midtrans Merchant ID" />
+                                        <input type="text" class="form-control midtrans_merchant_id" name="midtrans_merchant_id" value="<?= (isset($data['midtrans_merchant_id'])) ? $data['midtrans_merchant_id'] : '' ?>" placeholder="Midtrans Merchant ID" />
                                     </div>
                                     <div class="form-group">
                                         <label for="midtrans_client_key">Midtrans Client Key</label>
-                                        <input type="text" class="form-control" name="midtrans_client_key" value="<?= (isset($data['midtrans_client_key'])) ? $data['midtrans_client_key'] : '' ?>" placeholder="Midtrans Clients Key " />
+                                        <input type="text" class="form-control midtrans_client_key" name="midtrans_client_key" value="<?= (isset($data['midtrans_client_key'])) ? $data['midtrans_client_key'] : '' ?>" placeholder="Midtrans Clients Key " />
                                     </div>
                                     <div class="form-group">
                                         <label for="midtrans_server_key">Midtrans Server Key</label>
-                                        <input type="text" class="form-control" name="midtrans_server_key" value="<?= (isset($data['midtrans_server_key'])) ? $data['midtrans_server_key'] : '' ?>" placeholder="Midtrans Server key" />
+                                        <input type="text" class="form-control midtrans_server_key" name="midtrans_server_key" value="<?= (isset($data['midtrans_server_key'])) ? $data['midtrans_server_key'] : '' ?>" placeholder="Midtrans Server key" />
                                     </div>
                                     <div class="form-group">
                                         <label for="paypal_notification_url">Notification URL <small>(Set this as Webhook URL in your Midtrans account)</small></label>
-                                        <input type="text" class="form-control" name="midtrans_notification_url" value="<?= DOMAIN_URL . "midtrans/notification-handler.php" ?>" placeholder="Midtrans Webhook URL" disabled />
+                                        <input type="text" class="form-control midtrans_notification_url" name="midtrans_notification_url" value="<?= DOMAIN_URL . "midtrans/notification-handler.php" ?>" placeholder="Midtrans Webhook URL" disabled />
                                     </div>
                                     <div class="form-group">
                                         <label for="paypal_notification_url">Payment Return URL <small>(Set this as Finish URL in your Midtrans account)</small></label>
-                                        <input type="text" class="form-control" name="midtrans_return_url" value="<?= DOMAIN_URL . "midtrans/payment-process.php" ?>" placeholder="Midtrans return URL" disabled />
+                                        <input type="text" class="form-control midtrans_return_url" name="midtrans_return_url" value="<?= DOMAIN_URL . "midtrans/payment-process.php" ?>" placeholder="Midtrans return URL" disabled />
                                     </div>
                                     <hr>
                                     <h5>Stripe Payments </h5>
@@ -270,15 +285,15 @@ include "header.php"; ?>
                                     </div>
                                     <div class="form-group">
                                         <label for="stripe_publishable_key">Stripe Publishable Key</label>
-                                        <input type="text" class="form-control" name="stripe_publishable_key" value="<?= (isset($data['stripe_publishable_key'])) ? $data['stripe_publishable_key'] : '' ?>" placeholder="Stripe Publishable Key" />
+                                        <input type="text" class="form-control stripe_publishable_key" name="stripe_publishable_key" value="<?= (isset($data['stripe_publishable_key'])) ? $data['stripe_publishable_key'] : '' ?>" placeholder="Stripe Publishable Key" />
                                     </div>
                                     <div class="form-group">
                                         <label for="stripe_secret_key">Stripe Secret Key</label>
-                                        <input type="text" class="form-control" name="stripe_secret_key" value="<?= (isset($data['stripe_secret_key'])) ? $data['stripe_secret_key'] : '' ?>" placeholder="Stripe Secret Key " />
+                                        <input type="text" class="form-control stripe_secret_key" name="stripe_secret_key" value="<?= (isset($data['stripe_secret_key'])) ? $data['stripe_secret_key'] : '' ?>" placeholder="Stripe Secret Key " />
                                     </div>
                                     <div class="form-group">
                                         <label for="stripe_webhook_secret_key">Stripe Webhook Secret Key</label>
-                                        <input type="text" class="form-control" name="stripe_webhook_secret_key" value="<?= (isset($data['stripe_webhook_secret_key'])) ? $data['stripe_webhook_secret_key'] : '' ?>" placeholder="Stripe Webhook Secret Key " />
+                                        <input type="text" class="form-control stripe_webhook_secret_key" name="stripe_webhook_secret_key" value="<?= (isset($data['stripe_webhook_secret_key'])) ? $data['stripe_webhook_secret_key'] : '' ?>" placeholder="Stripe Webhook Secret Key " />
                                     </div>
                                     <div class="form-group">
                                         <label for="paypal_notification_url">Payment Endpoint URL <small>(Set this as Endpoint URL in your Stripe account)</small></label>
@@ -442,11 +457,62 @@ include "header.php"; ?>
                                     </div>
                                     <div class="form-group">
                                         <label for="paytm_merchant_key">Merchant key</label>
-                                        <input type="text" class="form-control" name="paytm_merchant_key" value="<?= (isset($data['paytm_merchant_key'])) ? $data['paytm_merchant_key'] : '' ?>" placeholder="Paytm Merchant Key" />
+                                        <input type="text" class="form-control paytm_merchant_key" name="paytm_merchant_key" value="<?= (isset($data['paytm_merchant_key'])) ? $data['paytm_merchant_key'] : '' ?>" placeholder="Paytm Merchant Key" />
                                     </div>
                                     <div class="form-group">
                                         <label for="paytm_merchant_id">Merchant ID</label>
-                                        <input type="text" class="form-control" name="paytm_merchant_id" value="<?= (isset($data['paytm_merchant_id'])) ? $data['paytm_merchant_id'] : '' ?>" placeholder="Paytm Merchant ID" />
+                                        <input type="text" class="form-control paytm_merchant_id" name="paytm_merchant_id" value="<?= (isset($data['paytm_merchant_id'])) ? $data['paytm_merchant_id'] : '' ?>" placeholder="Paytm Merchant ID" />
+                                    </div>
+                                    <hr>
+                                    <h5>SSLCommerz Payments </h5>
+                                    <hr>
+                                    <div class="form-group">
+                                        <label for="paytm_payment_method">SSLCommerz Payments <small>[ Enable / Disable ] </small></label><br>
+                                        <input type="checkbox" id="ssl_commerce_payment_method_btn" class="js-switch" <?= (isset($data['ssl_commerce_payment_method']) && !empty($data['ssl_commerce_payment_method']) && $data['ssl_commerce_payment_method'] == '1') ? 'checked' : ""; ?>>
+                                        <input type="hidden" id="ssl_commerce_payment_method" name="ssl_commerce_payment_method" value="<?= (isset($data['ssl_commerce_payment_method']) && !empty($data['ssl_commerce_payment_method'])) ? $data['ssl_commerce_payment_method'] : 0; ?>">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="">SSLCommerz Payment Mode <small>[ sandbox / live ]</small></label>
+                                        <select name="ssl_commerece_mode" class="form-control">
+                                            <option value="sandbox" <?= (isset($data['ssl_commerece_mode']) && $data['ssl_commerece_mode'] == 'sandbox') ? "selected" : "" ?>>Sandbox ( Testing )</option>
+                                            <option value="production" <?= (isset($data['ssl_commerece_mode']) && $data['ssl_commerece_mode'] == 'production') ? "selected" : "" ?>>Production ( Live )</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ssl_commerece_store_id">Store ID</label>
+                                        <input type="text" class="form-control ssl_commerece_store_id" name="ssl_commerece_store_id" value="<?= (isset($data['ssl_commerece_store_id'])) ? $data['ssl_commerece_store_id'] : '' ?>" placeholder="SSL Commerece Store ID" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ssl_commerece_secret_key">Store Password (API/Secret Key)</label>
+                                        <input type="text" class="form-control ssl_commerece_secret_key" name="ssl_commerece_secret_key" value="<?= (isset($data['ssl_commerece_secret_key'])) ? $data['ssl_commerece_secret_key'] : '' ?>" placeholder="SSL Commerece Secret Key" />
+                                    </div>
+                                    <hr>
+                                    <h5>Direct Bank Transfer </h5>
+                                    <hr>
+                                    <div class="form-group">
+                                        <label for="direct_bank_transfer">Direct Bank Transfer <small>[ Enable / Disable ] </small></label><br>
+                                        <input type="checkbox" id="direct_bank_transfer_btn" class="js-switch" <?= (isset($data['direct_bank_transfer_method']) && !empty($data['direct_bank_transfer_method']) && $data['direct_bank_transfer_method'] == '1') ? 'checked' : ""; ?>>
+                                        <input type="hidden" id="direct_bank_transfer_method" name="direct_bank_transfer_method" value="<?= (isset($data['direct_bank_transfer_method']) && !empty($data['direct_bank_transfer_method'])) ? $data['direct_bank_transfer_method'] : 0; ?>">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="account_name">Account Name</label>
+                                        <input type="text" class="form-control account_name" name="account_name" value="<?= (isset($data['account_name'])) ? $data['account_name'] : '' ?>" placeholder="Account Name" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="account_number">Account Number</label>
+                                        <input type="text" class="form-control account_number" name="account_number" value="<?= (isset($data['account_number'])) ? $data['account_number'] : '' ?>" placeholder="Account Number" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="bank_name">Bank Name</label>
+                                        <input type="text" class="form-control bank_name" name="bank_name" value="<?= (isset($data['bank_name'])) ? $data['bank_name'] : '' ?>" placeholder="Bank Name" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="bank_code">Bank Code</label>
+                                        <input type="text" class="form-control bank_code" name="bank_code" value="<?= (isset($data['bank_code'])) ? $data['bank_code'] : '' ?>" placeholder="Bank Code" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="notes">Extra Notes</label>
+                                        <textarea rows="10" cols="10 " class="form-control notes" name="notes" id="notes"><?= (isset($data['notes'])) ? $data['notes'] : '' ?></textarea>
                                     </div>
                                     <br>
                                     <div class="form-group">
@@ -483,22 +549,40 @@ include "header.php"; ?>
     changeCheckbox.onchange = function() {
         if ($(this).is(':checked')) {
             $('#paypal_payment_method').val(1);
+            $('.paypal_mode_select').attr('required', "required");
+            $('.paypal_mode_select').attr('required', "required");
+            $('.paypal_currency_select').attr('required', "required");
+            $('.paypal_email').attr('required', "required");
+            $('.paypal_notification_url').attr('required', "required");
         } else {
             $('#paypal_payment_method').val(0);
+            $('.paypal_mode_select').removeAttr('required', "required");
+            $('.paypal_mode_select').removeAttr('required', "required");
+            $('.paypal_currency_select').removeAttr('required', "required");
+            $('.paypal_email').removeAttr('required', "required");
+            $('.paypal_notification_url').removeAttr('required', "required");
         }
+
     };
 
     /* payumoney change button value */
 
-    var changeCheckbox = document.querySelector('#payumoney_payment_method_btn');
-    var init = new Switchery(changeCheckbox);
-    changeCheckbox.onchange = function() {
-        if ($(this).is(':checked')) {
-            $('#payumoney_payment_method').val(1);
-        } else {
-            $('#payumoney_payment_method').val(0);
-        }
-    };
+    // var changeCheckbox = document.querySelector('#payumoney_payment_method_btn');
+    // var init = new Switchery(changeCheckbox);
+    // changeCheckbox.onchange = function() {
+    //     if ($(this).is(':checked')) {
+    //         $('#payumoney_payment_method').val(1);
+    //         $('.merchant_key_payu').attr('required', "required");
+    //         $('.merchant_key_id').attr('required', "required");
+    //         $('.merchant_key_salt').attr('required', "required");
+    //     } else {
+    //         $('#payumoney_payment_method').val(0);
+    //         $('.merchant_key_payu').removeAttr('required', "required");
+    //         $('.merchant_key_id').removeAttr('required', "required");
+    //         $('.merchant_key_salt').removeAttr('required', "required");
+    //     }
+
+    // };
 
     /* razorpay change button value */
 
@@ -507,9 +591,14 @@ include "header.php"; ?>
     changeCheckbox.onchange = function() {
         if ($(this).is(':checked')) {
             $('#razorpay_payment_method').val(1);
+            $('.raz_key').attr('required', "required");
+            $('.raz_secret').attr('required', "required");
         } else {
             $('#razorpay_payment_method').val(0);
+            $('.raz_key').removeAttr('required', "required");
+            $('.raz_secret').removeAttr('required', "required");
         }
+
     };
 
     /* COD button value */
@@ -522,6 +611,7 @@ include "header.php"; ?>
         } else {
             $('#cod_payment_method').val(0);
         }
+
     };
 
     /* Paystack button value */
@@ -530,8 +620,12 @@ include "header.php"; ?>
     changeCheckbox.onchange = function() {
         if ($(this).is(':checked')) {
             $('#paystack_payment_method').val(1);
+            $('.paystack_secret_key').attr('required', "required");
+            $('.paystack_public_key').attr('required', "required");
         } else {
             $('#paystack_payment_method').val(0);
+            $('.paystack_secret_key').removeAttr('required', "required");
+            $('.paystack_public_key').removeAttr('required', "required");
         }
     };
 
@@ -541,9 +635,16 @@ include "header.php"; ?>
     changeCheckbox.onchange = function() {
         if ($(this).is(':checked')) {
             $('#flutterwave_payment_method').val(1);
+            $('.flutterwave_encryption_key').attr('required', "required");
+            $('.flutterwave_secret_key').attr('required', "required");
+            $('.flutterwave_public_key').attr('required', "required");
         } else {
             $('#flutterwave_payment_method').val(0);
+            $('.flutterwave_encryption_key').removeAttr('required', "required");
+            $('.flutterwave_secret_key').removeAttr('required', "required");
+            $('.flutterwave_public_key').removeAttr('required', "required");
         }
+
     };
 
     /* Midtrans button value */
@@ -552,9 +653,20 @@ include "header.php"; ?>
     changeCheckbox.onchange = function() {
         if ($(this).is(':checked')) {
             $('#midtrans_payment_method').val(1);
+            $('.midtrans_return_url').attr('required', "required");
+            $('.midtrans_notification_url').attr('required', "required");
+            $('.midtrans_server_key').attr('required', "required");
+            $('.midtrans_client_key').attr('required', "required");
+            $('.midtrans_merchant_id').attr('required', "required");
         } else {
             $('#midtrans_payment_method').val(0);
+            $('.midtrans_return_url').removeAttr('required', "required");
+            $('.midtrans_notification_url').removeAttr('required', "required");
+            $('.midtrans_server_key').removeAttr('required', "required");
+            $('.midtrans_client_key').removeAttr('required', "required");
+            $('.midtrans_merchant_id').removeAttr('required', "required");
         }
+
     };
 
     /* Midtrans button value */
@@ -563,9 +675,16 @@ include "header.php"; ?>
     changeCheckbox.onchange = function() {
         if ($(this).is(':checked')) {
             $('#stripe_payment_method').val(1);
+            $('.stripe_webhook_secret_key').attr('required', "required");
+            $('.stripe_secret_key').attr('required', "required");
+            $('.stripe_publishable_key').attr('required', "required");
         } else {
             $('#stripe_payment_method').val(0);
+            $('.stripe_webhook_secret_key').removeAttr('required', "required");
+            $('.stripe_secret_key').removeAttr('required', "required");
+            $('.stripe_publishable_key').removeAttr('required', "required");
         }
+
     };
 
     /* paytm change button value */
@@ -575,15 +694,64 @@ include "header.php"; ?>
     changeCheckbox.onchange = function() {
         if ($(this).is(':checked')) {
             $('#paytm_payment_method').val(1);
+            $('.paytm_merchant_key').attr('required', "required");
+            $('.paytm_merchant_key').attr('required', "required");
         } else {
             $('#paytm_payment_method').val(0);
+            $('.paytm_merchant_key').removeAttr('required', "required");
+            $('.paytm_merchant_key').removeAttr('required', "required");
         }
+
     };
 
+    /* ssl commerce change button value */
+
+    var changeCheckbox = document.querySelector('#ssl_commerce_payment_method_btn');
+    var init = new Switchery(changeCheckbox);
+    changeCheckbox.onchange = function() {
+        if ($(this).is(':checked')) {
+            $('#ssl_commerce_payment_method').val(1);
+            $('.ssl_commerece_secret_key').attr('required', "required");
+            $('.ssl_commerece_store_id').attr('required', "required");
+        } else {
+            $('#ssl_commerce_payment_method').val(0);
+            $('.ssl_commerece_secret_key').removeAttr('required', "required");
+            $('.ssl_commerece_store_id').removeAttr('required', "required");
+        }
+
+    };
+
+    /* Direct Bank Transfer change button value */
+    var changeCheckbox = document.querySelector('#direct_bank_transfer_btn');
+    var init = new Switchery(changeCheckbox);
+    changeCheckbox.onchange = function() {
+
+        if ($(this).is(':checked')) {
+            $('#direct_bank_transfer_method').val(1);
+            $('.notes').attr('required', "required");
+            $('.bank_code').attr('required', "required");
+            $('.bank_name').attr('required', "required");
+            $('.account_number').attr('required', "required");
+            $('.account_name').attr('required', "required");
+        } else {
+            $('#direct_bank_transfer_method').val(0);
+            $('.notes').removeAttr('required');
+            $('.bank_code').removeAttr('required');
+            $('.bank_name').removeAttr('required');
+            $('.account_number').removeAttr('required');
+            $('.account_name').removeAttr('required');
+        }
+
+    };
 </script>
+
 <script>
     $('#payment_method_settings_form').on('submit', function(e) {
         e.preventDefault();
+        // paypal validation:
+
+
+
         var formData = new FormData(this);
         $.ajax({
             type: 'POST',
@@ -602,4 +770,4 @@ include "header.php"; ?>
             }
         });
     });
-</script>
+</script>`

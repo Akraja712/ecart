@@ -24,7 +24,6 @@ function generate_token()
 
 function verify_token()
 {
-	return true;
     $jwt = new JWT();
     $fn = new custom_functions;
     try {

@@ -158,7 +158,7 @@ class functions
         }
     } //end of method get_current_page()
 
-    function doPages($page_size, $thepage, $query_string, $total = 0, $keyword)
+    function doPages($page_size, $thepage, $query_string, $keyword, $total = 0)
     {
         //per page count
         $index_limit = 10;
@@ -229,14 +229,13 @@ class functions
     {
         // replace non letter or digits by -
         $text = preg_replace('~[^\pL\d]+~u', '-', $text);
-
         // transliterate
         //   $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
-        $text = iconv('utf-8', 'UTF-8//TRANSLIT', $text);
+        // $text = iconv('utf-8', 'UTF-8//TRANSLIT', $text);
 
         // remove unwanted characters
-        $text = preg_replace('~[^-\w]+~', '', $text);
-
+        // $text = preg_replace('~[^-\w]+~', '', $text);
+        // echo $text;
         // trim
         $text = trim($text, '-');
 
@@ -257,37 +256,19 @@ class functions
     //storing token in database 
     public function registerDevice($fcm_id, $user_id = 0)
     {
-        $sql = "SELECT id,fcm_id FROM users WHERE `fcm_id` = '$fcm_id' ";
-        $this->db->sql($sql);
-        $res1 = $this->db->getResult();
-
-        $sql = "SELECT id,fcm_id FROM users WHERE `id` = '$user_id' ";
-        $this->db->sql($sql);
-        $res = $this->db->getResult();
-        if (!empty($res1) || !empty($res)) {
-            if ($res[0]['fcm_id'] != $fcm_id) {
-                if (!empty($res1)) {
-                    $user_id =  $res1[0]['id'];
-                }
-                $sql = "update users set `fcm_id` ='$fcm_id' where id = '" . $user_id . "'";
-                if ($this->db->sql($sql)) {
-                    return 0;
-                } else {
-                    return 1;
-                }
+        if (!empty($user_id)) {
+            $sql = "update users set `fcm_id` ='$fcm_id' where id = '" . $user_id . "'";
+            if ($this->db->sql($sql)) {
+                return  1;
             } else {
-                return 2;
+                return 0;
             }
         } else {
-            if (!$this->isDeviceRegistered($fcm_id)) {
-                $sql = "INSERT INTO devices (user_id,fcm_id) VALUES ('$user_id','$fcm_id')";
-                $this->db->sql($sql);
-                $res = $this->db->getResult();
-                if (!empty($res))
-                    return 1; //return 1 means failure
-                return 0; //return 0 means success
+            $sql = "insert into devices (`fcm_id`) values ('$fcm_id')";
+            if ($this->db->sql($sql)) {
+                return  1;
             } else {
-                return 2; //returning 2 means user_id already exist
+                return 0;
             }
         }
     }

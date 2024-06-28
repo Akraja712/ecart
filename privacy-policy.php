@@ -25,6 +25,30 @@ include "header.php"; ?>
 
 <head>
     <title>Privacy-Policy | <?= $settings['app_name'] ?> - Dashboard</title>
+    <style>
+        .asterik {
+            font-size: 20px;
+            line-height: 0px;
+            vertical-align: middle;
+        }
+
+        .tox .tox-menubar {
+            background-color: #e7e8e7;
+            display: flex;
+            flex: 0 0 auto;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            padding: 0 4px 0 4px;
+        }
+
+        .tox .tox-notification--warn,
+        .tox .tox-notification--warning {
+            background-color: #fffaea;
+            border-color: #ffe89d;
+            color: #222f3e;
+            display: none;
+        }
+    </style>
 </head>
 </body>
 <!-- Content Wrapper. Contains page content -->
@@ -37,7 +61,7 @@ include "header.php"; ?>
     $res = $db->getResult();
     $message = '';
     if (isset($_POST['btn_update'])) {
-        if (ALLOW_MODIFICATION == 0 && !defined(ALLOW_MODIFICATION)) {
+        if (defined('ALLOW_MODIFICATION') && ALLOW_MODIFICATION == 0) {
             echo '<label class="alert alert-danger">This operation is not allowed in demo panel!.</label>';
             return false;
         }
@@ -94,16 +118,16 @@ include "header.php"; ?>
                         <form method="post" enctype="multipart/form-data">
                             <div class="box-body">
                                 <div class="form-group">
-                                    <label for="app_name">Privacy Policy:</label>
-                                    <textarea rows="10" cols="10" class="form-control" name="privacy_policy" id="privacy_policy" required><?= $res[1]['value'] ?></textarea>
+                                    <label for="app_name">Privacy Policy: <i class="address_note"></i> </label>
+                                    <textarea rows="10" cols="10" class="form-control addr_editor" name="privacy_policy" id="privacy_policy" required><?= $res[1]['value'] ?></textarea>
                                 </div>
                                 <div class="box-header with-border">
                                     <h3 class="box-title">Update Terms Conditions</h3>
                                 </div>
                                 <div class="box-body">
                                     <div class="form-group">
-                                        <label for="app_name">Terms & Conditions:</label>
-                                        <textarea rows="10" cols="10" class="form-control" name="terms_conditions" id="terms_conditions" required><?= $res[2]['value'] ?></textarea>
+                                        <label for="app_name">Terms & Conditions: <i class="address_note"></i> </label>
+                                        <textarea rows="10" cols="10" class="form-control addr_editor" name="terms_conditions" id="terms_conditions" required><?= $res[2]['value'] ?></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -127,8 +151,11 @@ include "header.php"; ?>
 
 </html>
 <?php include "footer.php"; ?>
-<script type="text/javascript" src="css/js/ckeditor/ckeditor.js"></script>
-<script type="text/javascript">
-    CKEDITOR.replace('privacy_policy');
-    CKEDITOR.replace('terms_conditions');
+<script>
+    $(document).ready(function() {
+        ltr = '<svg width="20" height="20"><path d="M11 5h7a1 1 0 010 2h-1v11a1 1 0 01-2 0V7h-2v11a1 1 0 01-2 0v-6c-.5 0-1 0-1.4-.3A3.4 3.4 0 017.8 10a3.3 3.3 0 010-2.8 3.4 3.4 0 011.8-1.8L11 5zM4.4 16.2L6.2 15l-1.8-1.2a1 1 0 011.2-1.6l3 2a1 1 0 010 1.6l-3 2a1 1 0 11-1.2-1.6z" fill-rule="evenodd"></path></svg>';
+        rtl = '<svg width="20" height="20"><path d="M8 5h8v2h-2v12h-2V7h-2v12H8v-7c-.5 0-1 0-1.4-.3A3.4 3.4 0 014.8 10a3.3 3.3 0 010-2.8 3.4 3.4 0 011.8-1.8L8 5zm12 11.2a1 1 0 11-1 1.6l-3-2a1 1 0 010-1.6l3-2a1 1 0 111 1.6L18.4 15l1.8 1.2z" fill-rule="evenodd"></path></svg>';
+        html = '( Use ' + ltr + ' for LTR and use ' + rtl + ' for RTL )';
+        $('.address_note').append(html);
+    });
 </script>

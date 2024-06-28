@@ -19,7 +19,7 @@ if (isset($_POST['btnAdd'])) {
             $error['pincode'] = " <span class='label label-danger'>Required!</span>";
         }
 
-       // $check = $fn->get_data('pincodes', 'pincode=' . "'$pincode'", ['pincode']);
+        $check = $fn->get_data('pincodes', 'pincode=' . "'$pincode'", ['pincode']);
         if (!empty($check)) {
             $error['add_pincode'] = '<label class="alert alert-danger">Pincode Alreay exist</label>';
         } else {

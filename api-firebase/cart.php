@@ -38,23 +38,23 @@ if (isset($config['system_timezone']) && isset($config['system_timezone_gmt'])) 
     $db->sql("SET `time_zone` = '+05:30'");
 }
 
-// if (!isset($_POST['accesskey'])) {
-//     $response['error'] = true;
-//     $response['message'] = "Access key is invalid or not passed!";
-//     print_r(json_encode($response));
-//     return false;
-// }
-//$accesskey = $db->escapeString($fn->xss_clean_array($_POST['accesskey']));
-// if ($access_key != $accesskey) {
-//     $response['error'] = true;
-//     $response['message'] = "invalid accesskey!";
-//     print_r(json_encode($response));
-//     return false;
-// }
+if (!isset($_POST['accesskey'])) {
+    $response['error'] = true;
+    $response['message'] = "Access key is invalid or not passed!";
+    print_r(json_encode($response));
+    return false;
+}
+$accesskey = $db->escapeString($fn->xss_clean_array($_POST['accesskey']));
+if ($access_key != $accesskey) {
+    $response['error'] = true;
+    $response['message'] = "invalid accesskey!";
+    print_r(json_encode($response));
+    return false;
+}
 
-// if (!verify_token()) {
-//     return false;
-// }
+if (!verify_token()) {
+    return false;
+}
 
 /*
 1.add_to_cart
@@ -116,7 +116,6 @@ if ((isset($_POST['add_to_cart'])) && ($_POST['add_to_cart'] == 1)) {
                             'qty' => $qty,
                             'save_for_later' => 0
                         );
-                        
                         if ($db->update('cart',  'user_id=' . $user_id . ' AND product_variant_id=' . $product_variant_id, $data)) {
                             $response['error'] = false;
                             $response['message'] = 'Item added in users cart successfully';
