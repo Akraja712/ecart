@@ -2575,13 +2575,21 @@ class custom_functions
     {
         $mode = $this->get_data('settings', 'variable="maintenance_mode"', ['*'])[0];
         $mode = (array) json_decode($mode['value']);
+        $found = false;
+    
         foreach ($mode as $app => $value) {
             if ($app_name == $app) {
                 $mode = $value;
+                $found = true;
+                break;
             }
         }
-        if ($mode == [] || $mode == 0)
+    
+        if (!$found) {
             $mode = "0";
+        }
+    
         return $mode;
     }
+    
 }
