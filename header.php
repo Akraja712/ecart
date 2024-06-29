@@ -18,11 +18,7 @@ if (isset($config['system_timezone']) && isset($config['system_timezone_gmt'])) 
 }
 
 $settings['app_name'] = $config['app_name'];
-$words = explode(" ", $settings['app_name']);
-$acronym = "";
-foreach ($words as $w) {
-    $acronym .= $w[0];
-}
+
 
 $currency = $fn->get_settings('currency');
 $shippint_type = $fn->get_settings('local_shipping');
