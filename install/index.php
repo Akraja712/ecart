@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $_POST) {
 <body>
     <div class="container py-4">
         <div class="col-md-4 col-md-offset-4">
-            <h1>eCart Multivendor Installer</h1>
+            <h1>GPN-Collection Multivendor Installer</h1>
             <hr>
             <?php
             if (is_writable($db_config_path)) {

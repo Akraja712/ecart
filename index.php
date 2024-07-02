@@ -61,7 +61,7 @@ $logo = $fn->get_settings('logo');
 </body>
 <!-- Content Wrapper. Contains page content -->
 <?php if (empty(DOMAIN_URL)) { ?>
-    <h1 style="color:red;">You have to install eCart multivendor on your device!</h1>
+    <h1 style="color:red;">You have to install GPN-Collection multivendor on your device!</h1>
 <?php
 } else {
     include 'public/login-form.php';

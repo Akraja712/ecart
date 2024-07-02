@@ -2,7 +2,7 @@
 header("Access-Control-Allow-Origin: *");
 ?>
 <section class="content-header">
-    <h1>eCart Purchase Code <a href='purchase-code.php'></h1>
+    <h1>GPN-Collection Purchase Code <a href='purchase-code.php'></h1>
     <ol class="breadcrumb">
         <li><a href="home.php"><i class="fa fa-home"></i> Home</a></li>
     </ol>
@@ -49,7 +49,7 @@ header("Access-Control-Allow-Origin: *");
                 <div class="box-body">
                     <form id="validate_code_website" method="GET">
                         <div class="form-group">
-                            <label for="exampleInputEmail1">Enter the Purchase Code shared by the customer for eCart</label>
+                            <label for="exampleInputEmail1">Enter the Purchase Code shared by the customer for GPN-Collection</label>
                             <input type="text" class="form-control" id="purchase_code" name="purchase_code" placeholder="Enter the purchase code here" required>
                         </div>
                         <!-- /.box-body -->
@@ -111,7 +111,7 @@ header("Access-Control-Allow-Origin: *");
                         <div class="box-body">
                             <form id="validate_code_app" method="GET">
                                 <div class="form-group">
-                                    <label for="exampleInputEmail1">Enter the Purchase Code shared by the customer for eCart</label>
+                                    <label for="exampleInputEmail1">Enter the Purchase Code shared by the customer for GPN-Collection</label>
                                     <input type="text" class="form-control" id="purchase_code_app" name="purchase_code_app" placeholder="Enter the purchase code here" required>
                                 </div>
                                 <!-- /.box-body -->
